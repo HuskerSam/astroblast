@@ -1,6 +1,7 @@
 import Utility from '/utility.js';
 import U3D from '/utility3d.js';
 import Asteroid3D from '/asteroid3d.js';
+import Collision3D from '/collision3d.js';
 
 export class MoonBallApp {
   constructor() {
@@ -13,6 +14,8 @@ export class MoonBallApp {
   async load() {
     await this.initGraphics();
     await this._initContent3D();
+
+    new Collision3D(this.scene);
   }
   async initGraphics() {
     if (this.engine)
