@@ -14,8 +14,6 @@ export class MoonBallApp {
   async load() {
     await this.initGraphics();
     await this._initContent3D();
-
-    new Collision3D(this.scene);
   }
   async initGraphics() {
     if (this.engine)
@@ -34,14 +32,14 @@ export class MoonBallApp {
 
     this.engine.enableOfflineSupport = false;
     this.scene = await this.createScene();
-
+/*
     this.pipeline = new BABYLON.DefaultRenderingPipeline("default", true, this.scene, [this.camera, this.xr.baseExperience.camera]);
     this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
     this.scene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
     this.scene.imageProcessingConfiguration.exposure = 1;
     this.pipeline.glowLayerEnabled = true;
     this.pipeline.glowLayer.intensity = 0.35;
-
+*/
     window.addEventListener("resize", () => {
       this.engine.resize();
     });
@@ -54,8 +52,12 @@ export class MoonBallApp {
     //this.createMenu3DWrapper();
     this.scene.collisionsEnabled = false;
     //this.menuTab3D = new MenuTab3D(this);
+    let count = 100;
     this.asteroidHelper = new Asteroid3D(this);
-    await this.asteroidHelper.loadAsteroids()
+
+    await this.asteroidHelper.init(count);
+    this.collisionHelper = new Collision3D(this, count);
+    await this.collisionHelper.init();
     /*
     this.helpSlateHelper = new HelpSlate(this);
     this.chatSlateHelper = new ChatSlate(this);

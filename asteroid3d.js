@@ -8,8 +8,8 @@ export default class Asteroid3D {
     this.selectedAsteroidMaterial = new BABYLON.StandardMaterial('selectedAsteroidMaterial', this.app.scene);
 
     this.asteroidMaterial.wireframe = true;
-    this.asteroidMaterial.disableLighting = true
-    this.selectedAsteroidMaterial.disableLighting = true
+  //  this.asteroidMaterial.disableLighting = true
+  //  this.selectedAsteroidMaterial.disableLighting = true
     let t11 = new BABYLON.Texture('/media/asteroid2diff.jpg', this.app.scene);
     let t12 = new BABYLON.Texture('/media/asteroid2normal.jpg', this.app.scene);
     t11.vScale = 2;
@@ -75,175 +75,38 @@ export default class Asteroid3D {
     m3.ambientTexture = t3;
     this.asteroidSymbolMesh3.material = m3;
   }
-  async loadAsteroids() {
+  async init(count = 15) {
     let scene = this.app.scene;
-    if (this.asteroidLoadingLine1) {
-      this.asteroidLoadingLine1.remove();
 
-      for (let asteroid in this.loadedAsteroids) {
-        this.loadedAsteroids[asteroid].orbitWrapper.dispose();
-      }
-    }
-    this.loadedAsteroids = {};
-
-    let asteroids = await this.app.readJSONFile('/asteroidslist.json');
+    this.asteroidsNameList = await this.app.readJSONFile('/asteroidslist.json');
 
     let ratio = 0;
-    let max = asteroids.length;
+    let max = this.asteroidsNameList.length;
 
-    let count = 15;
     let overrideCount = this.app.urlParams.get('asteroidcount');
     if (overrideCount !== null)
       count = Number(overrideCount);
 
     if (count > max)
       count = max;
-    let randomArray = [];
+    this.randomArray = [];
     for (let c = 0; c < max; c++) {
-      randomArray.push(c);
+      this.randomArray.push(c);
     }
-    randomArray = this.app._shuffleArray(randomArray);
-    randomArray = randomArray.slice(0, count);
-    randomArray = randomArray.sort();
-    let linkNameList = '';
-    randomArray.forEach((index, i) => {
-      let name = asteroids[index];
-      let path = '/asteroids/' + encodeURIComponent(name);
-      linkNameList += `<a target="_blank" href="${path}">${name}</a>`;
-      if (i < count - 1)
-        linkNameList += ', '
-      if (i % 4 === 3)
-        linkNameList += '<br>';
-    });
-    this.asteroidLoadingLine1 = this.app.addLineToLoading(`Asteroids - ${count} from ${max} available<br>` + linkNameList);
-
-    this.asteroidSymbolMeshName = U3D.generateNameMesh(scene);
-
-    this.defaultAsteroidPath = this.buildAsteroidPath();
-    let endFrame = this.asteroidOrbitFrameCount;
-    this.defaultAsteroidPositionKeys = [];
-
-    let ptCount = this.defaultAsteroidPath.length - 1;
-    this.defaultAsteroidPath.forEach((value, index) => {
-      this.defaultAsteroidPositionKeys.push({
-        frame: Math.floor(endFrame * index / ptCount),
-        value
-      });
-    });
-
-    let promises = [];
-    for (let c = 0; c < count; c++)
-      promises.push(this.loadAsteroid(asteroids[randomArray[c]], c, count));
-
-    await Promise.all(promises);
+    this.randomArray = this.app._shuffleArray(this.randomArray);
+    this.randomArray = this.randomArray.slice(0, count);
+    this.randomArray = this.randomArray.sort();
   }
-  async loadAsteroid(asteroid, index, count) {
+  async loadAsteroid(asteroid, size = 3) {
     let scene = this.app.scene;
-    let startRatio = index / count;
-
     let containerPath = 'https://firebasestorage.googleapis.com/v0/b/sharedcursor.appspot.com/o/meshes%2Fasteroids%2F' +
       encodeURIComponent(asteroid) + '?alt=media';
     let mesh = await U3D.loadStaticMesh(scene, containerPath);
-    U3D.sizeNodeToFit(mesh, 3);
+    U3D.sizeNodeToFit(mesh, size);
     mesh.setEnabled(true);
 
     mesh.material = this.asteroidMaterial;
 
-    let orbitWrapper = new BABYLON.TransformNode('assetorbitwrapper' + asteroid, scene);
-    orbitWrapper.parent = mesh.parent;
-    mesh.parent = orbitWrapper;
-
-    let positionAnim = new BABYLON.Animation(
-      "asteroidposition" + asteroid,
-      "position",
-      60,
-      BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
-      BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
-    );
-    orbitWrapper.position.y = -1000;
-    let endFrame = this.asteroidOrbitFrameCount;
-    positionAnim.setKeys(this.defaultAsteroidPositionKeys);
-    if (!orbitWrapper.animations)
-      orbitWrapper.animations = [];
-    orbitWrapper.animations.push(positionAnim);
-    let orbitAnimation = scene.beginAnimation(orbitWrapper, 0, endFrame, true);
-
-    if (startRatio !== 0.0) {
-      orbitAnimation.goToFrame(Math.floor(endFrame * startRatio));
-    }
-
-    orbitWrapper.assetMeta = {
-      appClickable: true,
-      clickCommand: "customClick",
-      handlePointerDown: (pointerInfo, mesh, meta) => {
-        this.app.pauseAssetSpin(pointerInfo, mesh, meta);
-      },
-      name: asteroid,
-      asteroidType: true,
-      asteroidName: asteroid,
-      asteroidMesh: orbitWrapper,
-      orbitAnimation,
-      basePivot: mesh,
-      offsetY: 1.25,
-      containerPath,
-      extended: {}
-    };
-    orbitWrapper.parent = this.app.sceneTransformNode;
-
-    let delta = "";
-    if (Math.floor(Math.random() * 2) === 0) {
-      delta = "2";
-    }
-    if (Math.floor(Math.random() * 8) === 0) {
-      delta = "3";
-    }
-    const asteroidSymbol = this['asteroidSymbolMesh' + delta].clone("symbolshow1asteroid" + delta);
-    asteroidSymbol.setEnabled(true);
-    asteroidSymbol.parent = orbitWrapper;
-
-    this.loadedAsteroids[asteroid] = {
-      orbitWrapper,
-      mesh,
-      asteroidSymbol
-    };
-  }
-  buildAsteroidPath() {
-    let y = 1;
-
-    let xMin = -60;
-    let xMax = 35;
-    let zMin = -48;
-    let zMax = 48;
-
-    let keyPoints = [];
-
-    keyPoints.push(U3D.v4(xMax, y, -5, 128));
-    keyPoints.push(U3D.v4(0, y, zMax, 128));
-    keyPoints.push(U3D.v4(xMin, y, 0, 128));
-    keyPoints.push(U3D.v4(0, y, zMin, 128));
-    keyPoints.push(U3D.v4(32, y, 0, 64));
-    keyPoints.push(U3D.v4(0, y, 30, 64));
-    keyPoints.push(U3D.v4(-10, y, 0, 64));
-
-    keyPoints.push(U3D.v4(-50, y + 8, -40, 120));
-
-    //saturn
-    keyPoints.push(U3D.v4(-35, y, -20, 32));
-    keyPoints.push(U3D.v4(-25, y, -15, 32));
-    keyPoints.push(U3D.v4(-20, y, 0, 32));
-    keyPoints.push(U3D.v4(-30, y, 5, 32));
-    keyPoints.push(U3D.v4(-50, y + 8, -5, 32));
-
-    //jupiter
-    keyPoints.push(U3D.v4(-50, y, 20, 32));
-    keyPoints.push(U3D.v4(-15, y, 20, 32));
-    keyPoints.push(U3D.v4(-15, y, 55, 64));
-
-    keyPoints.push(U3D.v4(-35, y + 8, 35, 64));
-
-    let curve = U3D.curvePointsMerge(keyPoints);
-    let path = curve.getPoints();
-
-    return path;
+    return mesh;
   }
 }
