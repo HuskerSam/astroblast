@@ -1,0 +1,7 @@
+{
+    "port": 5000,
+    "server": {
+        "baseDir": "./public",
+        "routes": { "/node_modules": "node_modules" }
+    }
+}
