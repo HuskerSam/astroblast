@@ -29,7 +29,7 @@ export default class Collision3D {
       let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
       let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
     //console.log(asteroid);
-      SPSystem.addShape(asteroid, 5);
+      SPSystem.addShape(asteroid, 1);
       asteroid.dispose();
     };
 

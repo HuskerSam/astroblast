@@ -32,14 +32,7 @@ export class MoonBallApp {
 
     this.engine.enableOfflineSupport = false;
     this.scene = await this.createScene();
-/*
-    this.pipeline = new BABYLON.DefaultRenderingPipeline("default", true, this.scene, [this.camera, this.xr.baseExperience.camera]);
-    this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
-    this.scene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
-    this.scene.imageProcessingConfiguration.exposure = 1;
-    this.pipeline.glowLayerEnabled = true;
-    this.pipeline.glowLayer.intensity = 0.35;
-*/
+
     window.addEventListener("resize", () => {
       this.engine.resize();
     });
@@ -49,85 +42,18 @@ export class MoonBallApp {
     this.sceneTransformNode = new BABYLON.TransformNode('sceneBaseNodeForScale', this.scene);
     this.gui3DManager = new BABYLON.GUI.GUI3DManager(this.scene);
 
-    //this.createMenu3DWrapper();
     this.scene.collisionsEnabled = false;
-    //this.menuTab3D = new MenuTab3D(this);
-    let count = 100;
+    let count = 50;
     this.asteroidHelper = new Asteroid3D(this);
 
     await this.asteroidHelper.init(count);
     this.collisionHelper = new Collision3D(this, count);
     await this.collisionHelper.init();
-    /*
-    this.helpSlateHelper = new HelpSlate(this);
-    this.chatSlateHelper = new ChatSlate(this);
-    this.invisibleMaterial = new BABYLON.StandardMaterial("invisiblematerial", this.scene);
-    this.invisibleMaterial.alpha = 0;
-    */
 
     this.xr.baseExperience.camera.onBeforeCameraTeleport.add(() => {
       this.clearActiveFollowMeta();
     });
-    /*
-        this.addLineToLoading('Loading Assets...<br>');
-        let promises = [];
-        this.solarSystemDeck.forEach(card => {
-          promises.push(this.loadStaticAsset(card.id, this.sceneTransformNode, this.scene));
-        });
-        this.moonsDeck1.forEach(card => {
-          promises.push(this.loadStaticAsset(card.id, this.sceneTransformNode, this.scene));
-        });
-        this.moonsDeck2.forEach(card => {
-          promises.push(this.loadStaticAsset(card.id, this.sceneTransformNode, this.scene));
-        });
 
-        this.avatarHelper = new Avatar3D(this);
-        let loadingResults;
-        await Promise.all([
-          this.avatarHelper.loadAndInitAvatars(),
-          (loadingResults = await Promise.all(promises)),
-          this.asteroidHelper.loadAsteroids(),
-          Recast()
-        ]);
-    */
-    /*
-        this.playerMoonAssets = new Array(4);
-        let loadingHTML = '';
-        loadingResults.forEach(assetMesh => {
-          let meta = assetMesh.assetMeta;
-
-          if (meta.seatIndex !== undefined)
-            this.playerMoonAssets[meta.seatIndex] = assetMesh;
-
-          let normalLink = `<a href="${meta.extended.glbPath}" target="_blank">Asset</a>&nbsp;`;
-          let imgHTML = meta.symbol ? `<img src="${meta.extended.symbolPath}" class="symbol_image">` : '';
-
-          loadingHTML += `${meta.name}:
-            &nbsp;
-            ${normalLink}
-            <br>
-            <a href="${meta.url}" target="_blank">wiki</a>
-            &nbsp; ${imgHTML}
-            <br>`;
-
-          if (meta.noClick !== true) {
-            meta.appClickable = true;
-            meta.clickCommand = 'customClick';
-            meta.handlePointerDown = async (pointerInfo, mesh, meta) => {
-              this.pauseAssetSpin(pointerInfo, mesh, meta);
-            };
-          }
-        });
-        this.addLineToLoading(loadingHTML);
-
-        this.menuTab3D.initOptionsBar();
-        this.channelSpeechHelper = new ChannelSpeech(this);
-        this.actionChannelHelper = new ChannelAction(this);
-
-        let delta = new Date().getTime() - startTime.getTime();
-        console.log('init3D', delta);
-        this.addLineToLoading(`${delta} ms to load 3D content<br>`);
-    */
     this.paintedBoardTurn = this.turnNumber;
     this.startEngine();
 
@@ -155,8 +81,7 @@ export class MoonBallApp {
 
     let environment = scene.createDefaultEnvironment({
       createSkybox: false,
-      groundOpacity: 0,
-      groundSize: 150,
+      createGround: false,
       enableGroundShadow: false,
       enableGroundMirror: false
     });
@@ -172,11 +97,9 @@ export class MoonBallApp {
     scene.activeCamera.storeState();
 
     this.initSkybox();
-    this.xr = await scene.createDefaultXRExperienceAsync({
-      floorMeshes: [environment.ground]
-    });
+    this.xr = await scene.createDefaultXRExperienceAsync({});
+    this.toggleXRMovementType();
 
-    environment.ground.isPickable = false;
     this.scene.onPointerObservable.add((pointerInfo) => {
       switch (pointerInfo.type) {
         case BABYLON.PointerEventTypes.POINTERDOWN:
@@ -203,7 +126,7 @@ export class MoonBallApp {
     this.xr.input.onControllerAddedObservable.add((controller) => {
       controller.onMotionControllerInitObservable.add((motionController) => {
         motionController.onModelLoadedObservable.add(mc => {
-          this.XRControllerAdded(controller, motionController.handedness);
+        //  this.XRControllerAdded(controller, motionController.handedness);
         })
 
         let yComponent = motionController.getComponent('y-button');
@@ -293,6 +216,27 @@ export class MoonBallApp {
     console.log("Loading: ", str);
   }
 
+  toggleXRMovementType() {
+    if (!this.currentXRFeature) {
+      this.xr.baseExperience.featuresManager.disableFeature(BABYLON.WebXRFeatureName.TELEPORTATION);
+      this.xr.baseExperience.featuresManager.enableFeature(BABYLON.WebXRFeatureName.MOVEMENT, "stable", {
+        xrInput: this.xr.input,
+        movementSpeed: 0.075,
+        rotationSpeed: 0.15
+      });
+      this.currentXRFeature = 'movement';
+      //this.xr.teleportation.setSelectionFeature(null);
+    } else {
+      this.xr.baseExperience.featuresManager.disableFeature(BABYLON.WebXRFeatureName.MOVEMENT);
+
+      this.xr.teleportation = this.xr.baseExperience.featuresManager.enableFeature(BABYLON.WebXRFeatureName.TELEPORTATION, "stable", {
+        xrInput: this.xr.input,
+        floorMeshes: [this.env.ground]
+      });
+      this.xr.teleportation.setSelectionFeature(this.xr.pointerSelection);
+      this.currentXRFeature = false;
+    }
+  }
   startEngine() {
     if (this.engine3DStarted)
       return;
