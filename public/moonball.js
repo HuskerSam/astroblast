@@ -2,6 +2,8 @@ import Utility from '/utility.js';
 import U3D from '/utility3d.js';
 import Asteroid3D from '/asteroid3d.js';
 import Collision3D from '/collision3d.js';
+import Gun3D from '/gun3d.js';
+import * as YUKA from './fps/yuka.module.js'
 
 export class MoonBallApp {
   constructor() {
@@ -9,11 +11,31 @@ export class MoonBallApp {
     if (this.urlParams.get('instrumentation'))
       this.instrumentationOn = true;
 
+    this.entityManager = new YUKA.EntityManager()
+    this.time = new YUKA.Time();
+
+
     this.load();
   }
   async load() {
     await this.initGraphics();
     await this._initContent3D();
+
+    this.gun3D = new Gun3D(this);
+    await this.gun3D.init();
+
+    //  this.gun3D.gunMesh.parent = this.scene.activeCamera;
+    let weapon = this.models.get('weapon');
+    weapon.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6)
+    weapon.position = new BABYLON.Vector3(1, -1.5, 5)
+    weapon.rotation = new BABYLON.Vector3(-Math.PI / 2, Math.PI, Math.PI / 2)
+    //weapon.bakeCurrentTransformIntoVertices()
+    weapon.renderingGroupId = 2
+  //  gunMesh.freezeWorldMatrix()
+    weapon.alwaysSelectAsActiveMesh = true
+    weapon.parent = this.scene.activeCamera;
+
+    //this.gun3D.gunMesh.position = U3D(-20, -1, 0);
   }
   async initGraphics() {
     if (this.engine)
@@ -95,8 +117,21 @@ export class MoonBallApp {
     scene.activeCamera.speed = 0.5;
     this.camera.angularSensibility = 5000;
     scene.activeCamera.storeState();
+    this.environmentRadius = 35;
 
-    this.initSkybox();
+    let equipath = `/media/stars8k.jpg`;
+    this.photoDome = new BABYLON.PhotoDome(
+      "photoDome",
+      equipath, {
+        resolution: 256,
+        size: this.environmentRadius * 2.5
+      },
+      this.scene
+    );
+    this.photoDome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+    this.photoDome.fovMultiplier = 2.0;
+    this.photoDome.isPickable = false;
+
     this.xr = await scene.createDefaultXRExperienceAsync({});
     this.toggleXRMovementType();
 
@@ -126,7 +161,7 @@ export class MoonBallApp {
     this.xr.input.onControllerAddedObservable.add((controller) => {
       controller.onMotionControllerInitObservable.add((motionController) => {
         motionController.onModelLoadedObservable.add(mc => {
-        //  this.XRControllerAdded(controller, motionController.handedness);
+          this.XRControllerAdded(controller, motionController.handedness);
         })
 
         let yComponent = motionController.getComponent('y-button');
@@ -192,26 +227,7 @@ export class MoonBallApp {
 
     return scene;
   }
-  initSkybox() {
-    let equipath = `/media/stars8k.jpg`;
-    if (!this.photoDome) {
-      this.photoDome = new BABYLON.PhotoDome(
-        "photoDome",
-        equipath, {
-          resolution: 256,
-          size: 150
-        },
-        this.scene
-      );
-      this.photoDome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-      this.photoDome.fovMultiplier = 2.0;
-      this.photoDome.isPickable = false;
-    } else {
-      if (this.photoDome.photoTexture)
-        this.photoDome.photoTexture.dispose();
-      this.photoDome.photoTexture = new BABYLON.Texture(equipath, this.scene, false, true);
-    }
-  }
+
   addLineToLoading(str) {
     console.log("Loading: ", str);
   }
@@ -255,8 +271,14 @@ export class MoonBallApp {
   XRControllerAdded(model, handed) {
     if (handed === 'left') {
       this.leftHandedControllerGrip = model.grip;
-      this.menuBarTransformNode.parent = model.grip;
-      console.log(model)
+      let cylinder = BABYLON.MeshBuilder.CreateCylinder('leftpaddle', {
+        height: 0.25,
+        diameter: 0.15
+      }, this.scene);
+      cylinder.parent = this.leftHandedControllerGrip;
+      cylinder.position = U3D.v(0, 0.2, 0);
+      cylinder.rotation = U3D.v(0, 0, Math.PI / 6);
+
     }
     if (handed === 'right') {
       this.rightHandedControllerGrip = model.grip;
@@ -287,5 +309,15 @@ export class MoonBallApp {
       ];
     }
     return array;
+  }
+
+  addBullet(owner, ray) {
+    const bulletLine = this.assetManager.models.get('bulletLine').clone('bullet-line')
+    bulletLine.setEnabled(true)
+
+    const bullet = new Bullet(owner, ray)
+    bullet.setRenderComponent(bulletLine, sync)
+
+    this.add(bullet)
   }
 }

@@ -12,7 +12,7 @@ export default class Collision3D {
 
     this.asteroidCount = count;
 
-    this.sphereRadius = 65;
+    this.sphereRadius = this.app.environmentRadius;
     this.innerSize = this.sphereRadius - 2 * this.particleRadius;
   }
   async init() {

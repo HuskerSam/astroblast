@@ -495,4 +495,32 @@ export default class Utility3D {
       rotations
     };
   }
+  static intersectRay(ray, intersectionPoint, normal = null) {
+    const obstacles = this.obstacles
+    let minDistance = Infinity
+    let closestObstacle = null
+
+    for (let i = 0, l = obstacles.length; i < l; i++) {
+      const obstacle = obstacles[i]
+
+      if (
+        obstacle.geometry.intersectRay(ray, obstacle.worldMatrix, false, intersection.point, intersection.normal) !==
+        null
+      ) {
+        const squaredDistance = intersection.point.squaredDistanceTo(ray.origin)
+
+        if (squaredDistance < minDistance) {
+          minDistance = squaredDistance
+          closestObstacle = obstacle
+
+          intersectionPoint.copy(intersection.point)
+          if (normal) {
+            normal.copy(intersection.normal)
+          }
+        }
+      }
+    }
+
+    return closestObstacle === null ? null : closestObstacle
+  }
 }
