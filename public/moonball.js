@@ -2,7 +2,6 @@ import Utility from '/utility.js';
 import U3D from '/utility3d.js';
 import Asteroid3D from '/asteroid3d.js';
 import Collision3D from '/collision3d.js';
-import Gun3D from '/gun3d.js';
 import * as YUKA from './fps/yuka.module.js'
 
 export class MoonBallApp {
@@ -21,21 +20,6 @@ export class MoonBallApp {
     await this.initGraphics();
     await this._initContent3D();
 
-    this.gun3D = new Gun3D(this);
-    await this.gun3D.init();
-
-    //  this.gun3D.gunMesh.parent = this.scene.activeCamera;
-    let weapon = this.models.get('weapon');
-    weapon.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6)
-    weapon.position = new BABYLON.Vector3(1, -1.5, 5)
-    weapon.rotation = new BABYLON.Vector3(-Math.PI / 2, Math.PI, Math.PI / 2)
-    //weapon.bakeCurrentTransformIntoVertices()
-    weapon.renderingGroupId = 2
-  //  gunMesh.freezeWorldMatrix()
-    weapon.alwaysSelectAsActiveMesh = true
-    weapon.parent = this.scene.activeCamera;
-
-    //this.gun3D.gunMesh.position = U3D(-20, -1, 0);
   }
   async initGraphics() {
     if (this.engine)

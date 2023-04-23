@@ -112,12 +112,12 @@ export default class Collision3D {
             q.velocity.z += vdotn * nz;
 
             //position correction
-            particle.position.x += vdotn * nx * t;
-            particle.position.y += vdotn * ny * t;
-            particle.position.z += vdotn * nz * t;
-            q.position.x -= vdotn * nx * t;
-            q.position.y -= vdotn * ny * t;
-            q.position.z -= vdotn * nz * t;
+          //  particle.position.x += vdotn * nx * t;
+        //    particle.position.y += vdotn * ny * t;
+        //    particle.position.z += vdotn * nz * t;
+        //    q.position.x -= vdotn * nx * t;
+        //    q.position.y -= vdotn * ny * t;
+        //    q.position.z -= vdotn * nz * t;
           }
         }
       }
