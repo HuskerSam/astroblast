@@ -112,12 +112,12 @@ export default class Collision3D {
             q.velocity.z += vdotn * nz;
 
             //position correction
-          //  particle.position.x += vdotn * nx * t;
-        //    particle.position.y += vdotn * ny * t;
-        //    particle.position.z += vdotn * nz * t;
-        //    q.position.x -= vdotn * nx * t;
-        //    q.position.y -= vdotn * ny * t;
-        //    q.position.z -= vdotn * nz * t;
+            particle.position.x += vdotn * nx * t;
+            particle.position.y += vdotn * ny * t;
+            particle.position.z += vdotn * nz * t;
+            q.position.x -= vdotn * nx * t;
+            q.position.y -= vdotn * ny * t;
+            q.position.z -= vdotn * nz * t;
           }
         }
       }
@@ -130,10 +130,21 @@ export default class Collision3D {
       let nextRadius = Math.sqrt(nextx * nextx + nexty * nexty + nextz * nextz);
 
       if (nextRadius > this.sphereRadius) {
+
+        /*
         particle.velocity.x *= -1;
         particle.velocity.y *= -1;
         particle.velocity.z *= -1;
+        */
+        particle.position.x -= 4 * particle.velocity.x;
+        particle.position.y -= 4 * particle.velocity.y;
+        particle.position.z -= 4 * particle.velocity.z;
 
+        particle.position.x *= -1;
+        particle.position.y *= -1;
+        particle.position.z *= -1;
+
+        /*
         if (particle.position.x > 0)
           particle.position.x -= 2;
         else
@@ -149,7 +160,7 @@ export default class Collision3D {
         else
           particle.position.z += 2;
 
-
+*/
       }
 
       /*

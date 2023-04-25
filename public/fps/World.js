@@ -3,10 +3,7 @@
  * @author Examples with Babylon.js were made at https://github.com/eldinor/yuka-babylonjs-examples / roland@babylonjs.xyz
  */
 
-import * as YUKA from './fps/yuka.module.js'
-
-import 'https://preview.babylonjs.com/babylon.js'
-import 'https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js'
+import * as YUKA from './yuka.module.js'
 
 import { AssetManager } from './AssetManager.js'
 import { Bullet } from './Bullet.js'

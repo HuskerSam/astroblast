@@ -3,7 +3,7 @@
  * @author Examples with Babylon.js were made at https://github.com/eldinor/yuka-babylonjs-examples / roland@babylonjs.xyz
  */
 
-import { EventDispatcher, Vector3, Logger } from '../../../../../lib/yuka.module.js'
+import { EventDispatcher, Vector3, Logger } from './yuka.module.js'
 import world from './World.js'
 
 const PI05 = Math.PI / 2

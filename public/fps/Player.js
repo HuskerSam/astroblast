@@ -3,7 +3,7 @@
  * @author Examples with Babylon.js were made at https://github.com/eldinor/yuka-babylonjs-examples / roland@babylonjs.xyz
  */
 
-import { MovingEntity, GameEntity, Quaternion } from '../../../../../lib/yuka.module.js'
+import { MovingEntity, GameEntity, Quaternion } from './yuka.module.js'
 import { Blaster } from './Blaster.js'
 
 const q = new Quaternion()

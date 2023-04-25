@@ -3,9 +3,6 @@
  * @author Examples with Babylon.js were made at https://github.com/eldinor/yuka-babylonjs-examples / roland@babylonjs.xyz
  */
 
-import 'https://preview.babylonjs.com/babylon.js'
-import 'https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js'
-
 class AssetManager {
   constructor() {
     this.audios = new Map()

@@ -3,7 +3,7 @@
  * @author Examples with Babylon.js were made at https://github.com/eldinor/yuka-babylonjs-examples / roland@babylonjs.xyz
  */
 
-import { MovingEntity, MathUtils, Ray, Vector3 } from '../../../../../lib/yuka.module.js'
+import { MovingEntity, MathUtils, Ray, Vector3 } from './yuka.module.js'
 import world from './World.js'
 
 const intersectionPoint = new Vector3()

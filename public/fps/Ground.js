@@ -3,7 +3,7 @@
  * @author Examples with Babylon.js were made at https://github.com/eldinor/yuka-babylonjs-examples / roland@babylonjs.xyz
  */
 
-import { GameEntity } from '../../../../../lib/yuka.module.js'
+import { GameEntity } from './yuka.module.js'
 
 class Ground extends GameEntity {
   constructor(geometry) {
