@@ -6,14 +6,14 @@ import * as YUKA from './fps/yuka.module.js'
 
 //import './babylon.js'
 //import './babylonjs.materials.min.js'
-
+/*
 import { AssetManager } from './fps/AssetManager.js'
 import { Bullet } from './fps/Bullet.js'
 import { Ground } from './fps/Ground.js'
 import { Player } from './fps/Player.js'
 import { Target } from './fps/Target.js'
 import { FirstPersonControls } from './fps/FirstPersonControls.js'
-
+*/
 const target = new YUKA.Vector3()
 const intersection = {
   point: new YUKA.Vector3(),
@@ -45,7 +45,7 @@ export class MoonBallApp {
     this.obstacles = new Array()
     this.bulletHoles = new Array()
 
-    this.assetManager = new AssetManager()
+  //  this.assetManager = new AssetManager()
 
     this.animate = animate.bind(this)
     this.onIntroClick = onIntroClick.bind(this)
@@ -62,7 +62,7 @@ export class MoonBallApp {
   async load() {
     await this.initGraphics();
     await this._initContent3D();
-
+/*
     //this.initScene()
     await this.assetManager.init(this.scene)
     this.initGround()
@@ -72,6 +72,7 @@ export class MoonBallApp {
     this.initUI()
 
     this.animate()
+    */
   }
   async initGraphics() {
     if (this.engine)

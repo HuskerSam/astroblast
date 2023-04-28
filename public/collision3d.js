@@ -28,7 +28,7 @@ export default class Collision3D {
       let asteroidNameIndex = this.app.asteroidHelper.randomArray[index];
       let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
       let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
-    //console.log(asteroid);
+      //console.log(asteroid);
       SPSystem.addShape(asteroid, 1);
       asteroid.dispose();
     };
@@ -130,75 +130,31 @@ export default class Collision3D {
       let nextRadius = Math.sqrt(nextx * nextx + nexty * nexty + nextz * nextz);
 
       if (nextRadius > this.sphereRadius) {
+        let vecRaw = particle.velocity.normalizeToNew();
+        let vecIdeal = particle.position.normalizeToNew();
+        let vec2 = vecRaw.add(vecIdeal);
+        let directionRaw = U3D.v(vec2.x / 2.0, vec2.y / 2.0, vec2.z / 2.0);
+        let vDirection = directionRaw.normalizeToNew();
 
-        /*
-        particle.velocity.x *= -1;
-        particle.velocity.y *= -1;
-        particle.velocity.z *= -1;
-        */
-        particle.position.x -= 4 * particle.velocity.x;
-        particle.position.y -= 4 * particle.velocity.y;
-        particle.position.z -= 4 * particle.velocity.z;
+        let vel = particle.velocity;
+        let vAmplitude = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+
+        particle.velocity.x = vAmplitude * vDirection.x;
+        particle.velocity.y = vAmplitude * vDirection.y;
+        particle.velocity.z = vAmplitude * vDirection.z;
 
         particle.position.x *= -1;
         particle.position.y *= -1;
         particle.position.z *= -1;
 
-        /*
-        if (particle.position.x > 0)
-          particle.position.x -= 2;
-        else
-          particle.position.x += 2;
-
-        if (particle.position.y > 0)
-          particle.position.y -= 2;
-        else
-          particle.position.y += 2;
-
-        if (particle.position.z > 0)
-          particle.position.z -= 2;
-        else
-          particle.position.z += 2;
-
-*/
+        particle.position.x += particle.velocity.x;
+        particle.position.y += particle.velocity.y;
+        particle.position.z += particle.velocity.z;
       }
 
-      /*
-
-            if (nextx - (-this.sphereRadius) <= (1 + epsilon) * this.particleRadius && particle.velocity.x < 0 ||
-              this.sphereRadius - nextx < (1 + epsilon) * this.particleRadius && particle.velocity.x > 0) {
-              if (particle.velocity.x < 0) {
-                particle.position.x = 2 * wallLeft.position.x - particle.position.x + 2 * this.particleRadius;
-              } else {
-                particle.position.x = 2 * wallRight.position.x - particle.position.x - 2 * this.particleRadius;
-              }
-              particle.velocity.x *= -1;
-            }
-
-            if (nexty - (-this.sphereRadius) <= (1 + epsilon) * this.particleRadius && particle.velocity.y < 0 ||
-              this.sphereRadius - nexty < (1 + epsilon) * this.particleRadius && particle.velocity.y > 0) {
-              if (particle.velocity.y < 0) {
-                particle.position.y = 2 * ground.position.y - particle.position.y + 2 * this.particleRadius;
-              } else {
-                particle.position.y = 2 * roof.position.y - particle.position.y - 2 * this.particleRadius;
-              }
-              particle.velocity.y *= -1;
-            }
-
-            if (nextz - (-this.sphereRadius) <= (1 + epsilon) * this.particleRadius && particle.velocity.z < 0 ||
-              this.sphereRadius - nextz < (1 + epsilon) * this.particleRadius && particle.velocity.z > 0) {
-              if (particle.velocity.z < 0) {
-                particle.position.z = 2 * wallFront.position.z - particle.position.z + 2 * this.particleRadius;
-              } else {
-                particle.position.z = 2 * wallBack.position.z - particle.position.z - 2 * this.particleRadius;
-              }
-              particle.velocity.z *= -1;
-            }
-      */
       particle.position.x += particle.velocity.x;
       particle.position.y += particle.velocity.y;
       particle.position.z += particle.velocity.z;
-
     }
 
     SPS.initParticles();
