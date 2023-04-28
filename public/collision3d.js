@@ -6,8 +6,8 @@ export default class Collision3D {
     this.app = app;
     //Base particle
     this.particleRadius = 1;
-    this.particleMin = 0.05;
-    this.particleMax = 0.5;
+    this.particleMin = 0.025;
+    this.particleMax = 0.4;
     this.particleSpeed = Math.min(this.particleMax, Math.max(this.particleMin, Math.random() * (this.particleMax + this.particleMin)));
     this.asteroidCount = count;
 
@@ -79,7 +79,7 @@ export default class Collision3D {
 
         let vdotd = dx * vx + dy * vy + dz * vz;
 
-        let sq = 4 * vdotd * vdotd - 4 * vl2 * (dl2 - 4 * this.particleRadius * this.particleRadius);
+        let sq = 4 * vdotd * vdotd - 4 * vl2 * (dl2 - 2 * this.particleRadius * this.particleRadius);
 
         if (vdotd < 0 && sq > 0) {
           let sqroot = Math.sqrt(sq);
