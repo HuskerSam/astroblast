@@ -523,4 +523,20 @@ export default class Utility3D {
 
     return closestObstacle === null ? null : closestObstacle
   }
+
+  static amplitudeRange(vVector, minAmp, maxAmp) {
+    let amp = Math.sqrt(vVector.x * vVector.x + vVector.y * vVector.y + vVector.z * vVector.z);
+    if (amp < minAmp) {
+      let n = vVector.normalizeToNew();
+      vVector.x = n.x * minAmp;
+      vVector.y = n.y * minAmp;
+      vVector.z = n.z * minAmp;
+    } else if (amp > maxAmp) {
+      let n = vVector.normalizeToNew();
+      vVector.x = n.x * maxAmp;
+      vVector.y = n.y * maxAmp;
+      vVector.z = n.z * maxAmp;
+    }
+  }
+
 }
