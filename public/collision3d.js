@@ -6,9 +6,9 @@ export default class Collision3D {
     this.app = app;
     //Base particle
     this.particleRadius = 1;
-    this.particleSpeedX = 0.25 * Math.random() * this.particleRadius;
-    this.particleSpeedY = 0.25 * Math.random() * this.particleRadius;
-    this.particleSpeedZ = 0.25 * Math.random() * this.particleRadius;
+    this.particleSpeedX = 0.2 * (Math.random() + 0.1) * this.particleRadius;
+    this.particleSpeedY = 0.2 * (Math.random() + 0.1) * this.particleRadius;
+    this.particleSpeedZ = 0.2 * (Math.random() + 0.1) * this.particleRadius;
 
     this.asteroidCount = count;
 
@@ -147,9 +147,10 @@ export default class Collision3D {
         particle.position.y *= -1;
         particle.position.z *= -1;
 
-        particle.position.x += particle.velocity.x;
-        particle.position.y += particle.velocity.y;
-        particle.position.z += particle.velocity.z;
+        let nudgeSize = 5;
+        particle.position.x += nudgeSize * vecIdeal.x;
+        particle.position.y += nudgeSize * vecIdeal.y;
+        particle.position.z += nudgeSize * vecIdeal.z;
       }
 
       particle.position.x += particle.velocity.x;
