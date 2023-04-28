@@ -6,10 +6,9 @@ export default class Collision3D {
     this.app = app;
     //Base particle
     this.particleRadius = 1;
-    this.particleSpeedX = 0.2 * (Math.random() + 0.1);
-    this.particleSpeedY = 0.2 * (Math.random() + 0.1);
-    this.particleSpeedZ = 0.2 * (Math.random() + 0.1);
-
+    this.particleMin = 0.05;
+    this.particleMax = 0.5;
+    this.particleSpeed = Math.min(this.particleMax, Math.max(this.particleMin, Math.random() * (this.particleMax + this.particleMin)));
     this.asteroidCount = count;
 
     this.sphereRadius = this.app.environmentRadius;
@@ -53,8 +52,9 @@ export default class Collision3D {
         let z = this.innerSize - 2 * this.innerSize * Math.random();
 
         SPS.particles[p].position = new BABYLON.Vector3(x, y, z);
-        SPS.particles[p].direction = new BABYLON.Vector3(Math.floor(2.99 * (Math.random() + 0.1)) - 1, Math.floor(2.99 * (Math.random() + 0.1)) - 1, Math.floor(2.99 * (Math.random() + 0.1)) - 1);
-        SPS.particles[p].velocity = new BABYLON.Vector3(this.particleSpeedX * SPS.particles[p].direction.x, this.particleSpeedY * SPS.particles[p].direction.y, this.particleSpeedZ * SPS.particles[p].direction.z);
+        let vRandom = U3D.v(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+        let direction = vRandom.normalizeToNew();
+        SPS.particles[p].velocity = U3D.v(this.particleSpeed * direction.x, this.particleSpeed * direction.y, this.particleSpeed * direction.z);
       }
     };
 
@@ -111,8 +111,8 @@ export default class Collision3D {
             q.velocity.y += vdotn * ny;
             q.velocity.z += vdotn * nz;
 
-            U3D.amplitudeRange(q.velocity, 0.1, 0.65);
-            U3D.amplitudeRange(particle.velocity, 0.1, 0.65);
+            U3D.amplitudeRange(q.velocity, this.particleMin, this.particleMax);
+            U3D.amplitudeRange(particle.velocity,  this.particleMin, this.particleMax);
 
             //position correction
             particle.position.x += vdotn * nx * t;
