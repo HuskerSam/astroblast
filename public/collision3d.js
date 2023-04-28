@@ -53,7 +53,7 @@ export default class Collision3D {
         let z = this.innerSize - 2 * this.innerSize * Math.random();
 
         SPS.particles[p].position = new BABYLON.Vector3(x, y, z);
-        SPS.particles[p].direction = new BABYLON.Vector3(Math.floor(2.99 * Math.random()) - 1, Math.floor(2.99 * Math.random()) - 1, Math.floor(2.99 * Math.random()) - 1);
+        SPS.particles[p].direction = new BABYLON.Vector3(Math.floor(2.99 * (Math.random() + 0.1)) - 1, Math.floor(2.99 * (Math.random() + 0.1)) - 1, Math.floor(2.99 * (Math.random() + 0.1)) - 1);
         SPS.particles[p].velocity = new BABYLON.Vector3(this.particleSpeedX * SPS.particles[p].direction.x, this.particleSpeedY * SPS.particles[p].direction.y, this.particleSpeedZ * SPS.particles[p].direction.z);
       }
     };
@@ -111,8 +111,8 @@ export default class Collision3D {
             q.velocity.y += vdotn * ny;
             q.velocity.z += vdotn * nz;
 
-            U3D.amplitudeRange(q.velocity, 0.2, 1);
-            U3D.amplitudeRange(particle.velocity, 0.2, 1);
+            U3D.amplitudeRange(q.velocity, 0.1, 0.65);
+            U3D.amplitudeRange(particle.velocity, 0.1, 0.65);
 
             //position correction
             particle.position.x += vdotn * nx * t;
