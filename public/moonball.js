@@ -32,6 +32,7 @@ export class MoonBallApp {
     this.audios = new Map()
     this.animations = new Map()
     this.obstacles = new Array();
+    this.activeBullets = new Array();
 
     this.player = null
     this.controls = null
@@ -352,9 +353,7 @@ export class MoonBallApp {
       return;
     this.engine3DStarted = true;
     this.engine.runRenderLoop(() => {
-      if (this.blaster3D)
-        this.blaster3D.updateFrame();
-
+      this.updateFrame();
       this.scene.render();
     });
   }
@@ -404,15 +403,19 @@ export class MoonBallApp {
     return array;
   }
 
-  update() {
-    const delta = this.time.update().getDelta()
+  updateFrame() {
+    if (this.blaster3D)
+      this.blaster3D.updateFrame();
 
-    this.controls.update(delta)
-    this.entityManager.update(delta)
-
-    this.scene.render()
+    this.activeBullets.forEach(bullet => bullet.updateFrame());
   }
-
+  removeBullet(bullet) {
+    let bIndex = this.activeBullets.indexOf(bullet);
+    if (bIndex > -1) {
+      this.activeBullets[bIndex].dispose();
+      this.activeBullets.splice(bIndex, 1);
+    }
+  }
   add(entity) {
     this.entityManager.add(entity)
 
@@ -435,16 +438,6 @@ export class MoonBallApp {
         this.obstacles.splice(index, 1)
       }
     }
-  }
-
-  addBullet(owner, ray) {
-    const bulletLine = this.assetManager.models.get('bulletLine').clone('bullet-line')
-    bulletLine.setEnabled(true)
-
-    const bullet = new Bullet(owner, ray)
-    bullet.setRenderComponent(bulletLine, sync)
-
-    this.add(bullet)
   }
 
   addBulletHole(position, normal, audio) {

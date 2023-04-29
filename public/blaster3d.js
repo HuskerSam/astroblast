@@ -1,4 +1,5 @@
 import U3D from '/utility3d.js';
+import Bullet3D from '/bullet3d.js';
 
 export default class Blaster3D {
   constructor(app) {
@@ -43,13 +44,13 @@ export default class Blaster3D {
   connectGunsNotInXR() {
     this.leftWeaponMesh.parent = this.app.scene.activeCamera;
     this.leftWeaponMesh.scaling = U3D.v(0.55);
-    this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2 + 0.015, 0, 0);
+    this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2 + 0.0125, 0, 0);
     this.leftWeaponMesh.position = U3D.v(-0.5, -1.75, 4);
     this.leftWeaponMesh.origposition = U3D.v(-0.5, -1.75, 4);
 
     this.rightWeaponMesh.parent = this.app.scene.activeCamera;
     this.rightWeaponMesh.scaling = U3D.v(0.55);
-    this.rightWeaponMesh.rotation = U3D.v(0, Math.PI / 2 - 0.015, 0, 0);
+    this.rightWeaponMesh.rotation = U3D.v(0, Math.PI / 2 - 0.0125, 0, 0);
     this.rightWeaponMesh.position = U3D.v(0.5, -1.75, 4);
     this.rightWeaponMesh.origposition = U3D.v(0.5, -1.75, 4);
   }
@@ -75,7 +76,7 @@ export default class Blaster3D {
 
     let origin = U3D.v(-0.1, 0, 0);
     let direction = U3D.v(-1, 0, 0);
-    let length = 500;
+    let length = 5000;
     let ray = new BABYLON.Ray(origin, direction, length);
     this.leftRayHelper = new BABYLON.RayHelper(ray);
     this.leftRayHelper.attachToMesh(this.leftWeaponTip, origin, direction, length);
@@ -99,7 +100,7 @@ export default class Blaster3D {
 
     let origin2 = U3D.v(-0.1, 0, 0);
     let direction2 = U3D.v(-1, 0, 0);
-    let length2 = 500;
+    let length2 = 5000;
     let ray2 = new BABYLON.Ray(origin2, direction2, length2);
     this.rightRayHelper = new BABYLON.RayHelper(ray2);
     this.rightRayHelper.attachToMesh(this.rightWeaponTip, origin2, direction2, length2);
@@ -310,6 +311,17 @@ export default class Blaster3D {
       // first calculate a ray that represents the actual look direction from the head position
       let weaponTip = weaponMesh.weaponTip.getAbsolutePosition();
       ray.origin = U3D.vector(weaponTip);
+      ray.length = 10;
+      //  ray.direction = weaponMesh.getDirection(BABYLON.Axis.Z);
+
+      let rotation = BABYLON.Quaternion.Identity()
+      let p = U3D.v(0);
+      weaponMesh.getWorldMatrix().decompose(U3D.v(0), rotation, p)
+
+      let direction = U3D.v(-1, 0, 0);
+      let rotMat = BABYLON.Matrix.Zero();
+      rotation.toRotationMatrix(rotMat);
+      ray.direction = BABYLON.Vector3.TransformCoordinates(direction, rotMat);
 
       // determine closest intersection point with world object
       const result = this.app.intersectRay(ray, this.intersectionPoint)
@@ -322,12 +334,14 @@ export default class Blaster3D {
       this.muzzleSprite.position = U3D.vector(muzzleTip);
       this.muzzleSprite.isVisible = true;
       this.muzzleSprite.angle = Math.random() * Math.PI;
-      console.log(this.muzzleSprite);
+
       // adjust ammo
 
       this.roundsLeft--
 
       this.endTimeShot = this.shotTime
+
+      this.app.activeBullets.push(new Bullet3D(this.app, weaponMesh, ray));
 
       this.app.updateUI()
     } else if (this.status === STATUS.EMPTY) {
@@ -381,8 +395,6 @@ export default class Blaster3D {
 
       this.endTimeShot = Infinity
     }
-
-    return this
   }
 }
 

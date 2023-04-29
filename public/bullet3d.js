@@ -1,63 +1,57 @@
 import U3D from '/utility3d.js';
 
 export default class Bullet3D {
-  constructor(app, ray = new Ray()) {
+  constructor(app, weaponMesh, ray) {
     this.app = app
     this.ray = ray
+    this.weaponMesh = weaponMesh;
 
+    this.lastShotTime = Date.now();
     this.intersectionPoint = U3D.v(0);
     this.normal = U3D.v(0);
     this.currentRay = new BABYLON.Ray(ray.origin, ray.direction, ray.length);
 
     this.maxSpeed = 40 // 40 m/s
 
-    this.position.copy(ray.origin)
-    this.velocity.copy(ray.direction).multiplyScalar(this.maxSpeed)
+    this.origPosition = U3D.vector(ray.origin);
+    this.velocity = U3D.vector(ray.direction);//.multiplyByFloats(this.maxSpeed, this.maxSpeed, this.maxSpeed);
 
     const s = 1 + Math.random() * 3 // scale the shot line a bit
 
-    this.lifetime = 100
-    this.currentTime = 0
+    this.lifetime = 3000
+
+    this.currentTime = 0;
+
+    this.sceneBullet = BABYLON.MeshBuilder.CreateSphere("scenebullet", {
+      diameter: 0.5
+    }, this.app.scene);
+    this.sceneBullet.position = U3D.vector(this.origPosition);
+  }
+  dispose() {
+    this.sceneBullet.dispose();
   }
 
-  updateFrame(timeDelta) {
-    this.currentTime += timeDelta
+  updateFrame() {
+    let newLastTime = Date.now();
+    let timeElapsed = newLastTime - this.lastShotTime;
 
-    if (this.currentTime > this.lifetime) {
-      world.remove(this)
+    //this.lastShotTime = Date.now();
+    console.log(this.velocity);
+    this.sceneBullet.position.x += this.velocity.x;
+    this.sceneBullet.position.y += this.velocity.y;
+    this.sceneBullet.position.z += this.velocity.z;
+
+    if (timeElapsed > this.lifetime) {
+      this.app.removeBullet(this);
     } else {
-      this.currentRay.copy(this.ray)
-      this.currentRay.origin.copy(this.position)
-      super.update(delta)
+      let nextRay = this.currentRay.clone();
+      let nextOrigin = this.currentRay.origin.clone();
 
-      const entity = world.intersectRay(this.currentRay, this.intersectionPoint, this.normal)
+      let obstacle = this.app.intersectRay(this.nextRay, this.intersectionPoint, this.normal)
 
-      if (entity !== null && entity.name === 'target') {
-        // calculate distance from origin to intersection point
-        const distanceToIntersection = this.currentRay.origin.squaredDistanceTo(this.intersectionPoint)
-        const validDistance = this.currentRay.origin.squaredDistanceTo(this.position)
+      if (obstacle !== null) {
 
-        if (distanceToIntersection <= validDistance) {
-          // hit!
-          const audio = this.app.audios.get('impact' + MathUtils.randInt(1, 5))
-
-          if (audio.isPlaying === true) {
-            audio.stop()
-          }
-          audio.play()
-
-          // inform game entity about hit
-          this.app.sendMessage('hit', entity)
-
-          // add visual feedback
-          this.app.addBulletHole(this.intersectionPoint, this.normal, audio)
-
-          // remove bullet from world
-          this.app.removeBullet(this)
-        }
       }
     }
-
-    return this
   }
 }
