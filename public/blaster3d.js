@@ -22,6 +22,7 @@ export default class Blaster3D {
     this.endTimeReload = Infinity;
     this.endTimeMuzzleFire = Infinity;
 
+
   }
   async load() {
     let containerPath = '/media/gun.glb';
@@ -30,41 +31,63 @@ export default class Blaster3D {
     this.leftWeaponMesh = gunModel.clone('leftWeaponMesh');
     this.leftWeaponMesh.parent = this.app.scene.activeCamera;
     this.leftWeaponMesh.scaling = U3D.v(0.55);
-    this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
+    this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2 + 0.015, 0, 0);
     this.leftWeaponMesh.position = U3D.v(-0.5, -1.75, 4);
     this.leftWeaponMesh.origposition = U3D.v(-0.5, -1.75, 4);
     this.leftWeaponMesh.setEnabled(true);
     this.leftWeaponMesh.leftWeaponMesh = true;
     this.leftWeaponMesh.u3dRootNode = true;
+
     /*
    this.leftWeaponTip = BABYLON.MeshBuilder.CreateSphere('leftWeaponTip', {
     diameter: 0.5
   }, this.app.scene);
   */
+    this.leftMuzzleTip = new BABYLON.TransformNode('leftMuzzleTip', this.app.scene);
+    this.leftMuzzleTip.parent = this.leftWeaponMesh;
+    this.leftMuzzleTip.position = U3D.v(-5, 2.15, -0.25);
+    this.leftWeaponMesh.muzzleTip = this.leftMuzzleTip;
+
     this.leftWeaponTip = new BABYLON.TransformNode('leftWeaponTip', this.app.scene);
     this.leftWeaponTip.parent = this.leftWeaponMesh;
     this.leftWeaponTip.position = U3D.v(-2, 2.15, 0);
     this.leftWeaponMesh.weaponTip = this.leftWeaponTip;
 
+    let origin = U3D.v(-0.1, 0, 0);
+    let direction = U3D.v(-1, 0, 0);
+    let length = 500;
+    let ray = new BABYLON.Ray(origin, direction, length);
+    this.leftRayHelper = new BABYLON.RayHelper(ray);
+    this.leftRayHelper.attachToMesh(this.leftWeaponTip, origin, direction, length);
+    this.leftRayHelper.show(this.app.scene, new BABYLON.Color3(1, 0, 0));
+
     this.rightWeaponMesh = gunModel.clone('rightWeaponMesh');
     this.rightWeaponMesh.parent = this.app.scene.activeCamera;
     this.rightWeaponMesh.scaling = U3D.v(0.55);
-    this.rightWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
+    this.rightWeaponMesh.rotation = U3D.v(0, Math.PI / 2 - 0.015, 0, 0);
     this.rightWeaponMesh.position = U3D.v(0.5, -1.75, 4);
     this.rightWeaponMesh.origposition = U3D.v(0.5, -1.75, 4);
     this.rightWeaponMesh.setEnabled(true);
     this.rightWeaponMesh.rightWeaponMesh = true;
     this.rightWeaponMesh.u3dRootNode = true;
+
+    this.rightMuzzleTip = new BABYLON.TransformNode('rightMuzzleTip', this.app.scene);
+    this.rightMuzzleTip.parent = this.rightWeaponMesh;
+    this.rightMuzzleTip.position = U3D.v(-5, 2.15, 0.25);
+    this.rightWeaponMesh.muzzleTip = this.rightMuzzleTip;
     this.rightWeaponTip = new BABYLON.TransformNode('rightWeaponTip', this.app.scene);
-    /*
-        this.rightWeaponMeshTip = BABYLON.MeshBuilder.CreateSphere('rightWeaponMeshTip', {
-         diameter: 0.5
-       }, this.app.scene);
-       */
     this.rightWeaponTip.parent = this.rightWeaponMesh;
     this.rightWeaponTip.position = U3D.v(-2, 2.15, 0);
     this.rightWeaponMesh.weaponTip = this.rightWeaponTip;
 
+
+    let origin2 = U3D.v(-0.1, 0, 0);
+    let direction2 = U3D.v(-1, 0, 0);
+    let length2 = 500;
+  let ray2 = new BABYLON.Ray(origin2, direction2, length2);
+    this.rightRayHelper = new BABYLON.RayHelper(ray2);
+    this.rightRayHelper.attachToMesh(this.rightWeaponTip, origin2, direction2, length2);
+    this.rightRayHelper.show(this.app.scene, new BABYLON.Color3(0, 0, 1));
 
     const spritemanager = new BABYLON.SpriteManager('sprite-manager', 'media/muzzle.png', 1, 128, this.app.scene)
     spritemanager.renderingGroupId = 1
@@ -270,11 +293,6 @@ export default class Blaster3D {
 
       // first calculate a ray that represents the actual look direction from the head position
       let weaponTip = weaponMesh.weaponTip.getAbsolutePosition();
-      console.log(weaponTip);
-      // weaponTip.x -= 0.25;
-      //  weaponTip.y += 3.4;
-      //  weaponTip.z += 10;
-
       ray.origin = U3D.vector(weaponTip);
 
       // determine closest intersection point with world object
@@ -284,8 +302,8 @@ export default class Blaster3D {
       // choose a point on the ray far away from the origin
       const distance = result === null ? 1000 : ray.origin.distanceTo(intersectionPoint)
 
-
-      this.muzzleSprite.position = U3D.vector(weaponTip);
+      let muzzleTip = weaponMesh.muzzleTip.getAbsolutePosition();
+      this.muzzleSprite.position = U3D.vector(muzzleTip);
       this.muzzleSprite.isVisible = true;
       this.muzzleSprite.angle = Math.random() * Math.PI;
       console.log(this.muzzleSprite);
