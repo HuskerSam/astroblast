@@ -19,6 +19,10 @@ export default class Blaster3D {
     this.reloadTime = 1500;
     this.muzzleFireTime = 100;
 
+    this.shotCooldown = 500
+    this.lastLeftShot = 0;
+    this.lastRightShot = 0;
+
     this.endTimeShot = Infinity;
     this.endTimeReload = Infinity;
     this.endTimeMuzzleFire = Infinity;
@@ -282,11 +286,19 @@ export default class Blaster3D {
   }
 
   shoot(leftGun = true) {
-    let weaponMesh = this.leftWeaponMesh;
-    if (!leftGun)
-      weaponMesh = this.rightWeaponMesh;
-
     this.lastShotTime = Date.now();
+    let weaponMesh = this.leftWeaponMesh;
+    if (!leftGun) {
+      weaponMesh = this.rightWeaponMesh;
+      if (this.lastShotTime - this.lastRightShot < this.shotCooldown)
+        return;
+      this.lastRightShot = this.lastShotTime;
+    } else {
+      if (this.lastShotTime - this.lastLeftShot < this.shotCooldown)
+        return;
+      this.lastLeftShot = this.lastShotTime;
+    }
+
     if (this.status === STATUS.READY) {
       this.status = STATUS.SHOT
 
