@@ -18,8 +18,8 @@ export default class Collision3D {
 
     let SPS = new BABYLON.SolidParticleSystem('SPS', scene, {
       particleIntersection: true,
-      useModelMaterial: true
-      //   updatable: false
+      useModelMaterial: true,
+      expandable: true
     });
     let promises = [];
     let loadAsteroid = async (SPSystem, index) => {
@@ -58,6 +58,8 @@ export default class Collision3D {
     };
 
     SPS.updateParticle = (particle) => {
+      if (particle.beenHit)
+        return;
       for (let p = particle.idx + 1; p < SPS.nbParticles; p++) {
         let q = SPS.particles[p];
         let dx = particle.position.x - q.position.x;
@@ -158,11 +160,15 @@ export default class Collision3D {
       particle.position.x += particle.velocity.x;
       particle.position.y += particle.velocity.y;
       particle.position.z += particle.velocity.z;
+
+      this.app.checkParticleForCollision(particle);
     }
 
     SPS.initParticles();
     scene.registerAfterRender(() => {
       SPS.setParticles();
     });
+
+    this.SPS = SPS;
   }
 }

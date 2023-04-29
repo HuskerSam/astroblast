@@ -14,7 +14,7 @@ export default class Bullet3D {
     this.maxSpeed = 40 // 40 m/s
 
     this.origPosition = U3D.vector(ray.origin);
-    this.velocity = U3D.vector(ray.direction);//.multiplyByFloats(this.maxSpeed, this.maxSpeed, this.maxSpeed);
+    this.velocity = ray.direction.normalizeToNew().multiplyByFloats(0.5, 0.5, 0.5);
 
     const s = 1 + Math.random() * 3 // scale the shot line a bit
 
@@ -26,6 +26,12 @@ export default class Bullet3D {
       diameter: 0.5
     }, this.app.scene);
     this.sceneBullet.position = U3D.vector(this.origPosition);
+    this.sceneBullet.material = new BABYLON.StandardMaterial("sceneBullet", this.app.scene);
+    let color =  new BABYLON.Color3(1, 0, 0);
+    if (this.weaponMesh.rightWeaponMesh)
+      color = new BABYLON.Color3(0, 0, 1);
+    this.sceneBullet.material.diffuseColor = color;
+    this.sceneBullet.material.emissiveColor = color;
   }
   dispose() {
     this.sceneBullet.dispose();
@@ -35,23 +41,20 @@ export default class Bullet3D {
     let newLastTime = Date.now();
     let timeElapsed = newLastTime - this.lastShotTime;
 
-    //this.lastShotTime = Date.now();
-    console.log(this.velocity);
-    this.sceneBullet.position.x += this.velocity.x;
-    this.sceneBullet.position.y += this.velocity.y;
-    this.sceneBullet.position.z += this.velocity.z;
+    if (!this.stopMotion) {
+      this.sceneBullet.position.x += this.velocity.x;
+      this.sceneBullet.position.y += this.velocity.y;
+      this.sceneBullet.position.z += this.velocity.z;
+    }
 
     if (timeElapsed > this.lifetime) {
       this.app.removeBullet(this);
-    } else {
-      let nextRay = this.currentRay.clone();
-      let nextOrigin = this.currentRay.origin.clone();
-
-      let obstacle = this.app.intersectRay(this.nextRay, this.intersectionPoint, this.normal)
-
-      if (obstacle !== null) {
-
-      }
     }
+  }
+  hitObstacle(particle, hitDetails) {
+    this.stopMotion = true;
+    setTimeout(() => {
+      this.app.removeBullet(this);
+    }, 500);
   }
 }

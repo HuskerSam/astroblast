@@ -80,7 +80,7 @@ export default class Blaster3D {
     let ray = new BABYLON.Ray(origin, direction, length);
     this.leftRayHelper = new BABYLON.RayHelper(ray);
     this.leftRayHelper.attachToMesh(this.leftWeaponTip, origin, direction, length);
-    this.leftRayHelper.show(this.app.scene, new BABYLON.Color3(1, 0, 0));
+    this.leftRayHelper.show(this.app.scene, new BABYLON.Color3(1, 0.5, 0.5));
 
     this.rightWeaponMesh = gunModel.clone('rightWeaponMesh');
 
@@ -104,7 +104,7 @@ export default class Blaster3D {
     let ray2 = new BABYLON.Ray(origin2, direction2, length2);
     this.rightRayHelper = new BABYLON.RayHelper(ray2);
     this.rightRayHelper.attachToMesh(this.rightWeaponTip, origin2, direction2, length2);
-    this.rightRayHelper.show(this.app.scene, new BABYLON.Color3(0, 0, 1));
+    this.rightRayHelper.show(this.app.scene, new BABYLON.Color3(0.5, 0.5, 1));
 
     const spritemanager = new BABYLON.SpriteManager('sprite-manager', 'media/muzzle.png', 1, 128, this.app.scene)
     spritemanager.renderingGroupId = 1

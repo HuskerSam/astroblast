@@ -416,29 +416,6 @@ export class MoonBallApp {
       this.activeBullets.splice(bIndex, 1);
     }
   }
-  add(entity) {
-    this.entityManager.add(entity)
-
-    if (entity.geometry) {
-      this.obstacles.push(entity)
-    }
-  }
-
-  remove(entity) {
-    this.entityManager.remove(entity)
-
-    if (entity._renderComponent !== null) {
-      entity._renderComponent.dispose()
-    }
-
-    if (entity.geometry) {
-      const index = this.obstacles.indexOf(entity)
-
-      if (index !== -1) {
-        this.obstacles.splice(index, 1)
-      }
-    }
-  }
 
   addBulletHole(position, normal, audio) {
     const bulletHole = this.assetManager.models.get('bulletHole').clone('bullet-hole' + this.bulletHoles.length)
@@ -621,5 +598,19 @@ export class MoonBallApp {
 
     return closestObstacle === null ? null : closestObstacle
   }
+  checkParticleForCollision(particle) {
+    this.activeBullets.forEach(bullet => {
 
+      let hit = particle.intersectsMesh(bullet.sceneBullet);
+      if (hit) {
+        if (!particle.beenHit) {
+
+          particle.beenHit = true;
+          particle.position = U3D.v(100000, 100000, 100000);
+
+          bullet.hitObstacle(particle, hit);
+        }
+      }
+    });
+  }
 }
