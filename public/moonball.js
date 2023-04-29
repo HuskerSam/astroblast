@@ -352,32 +352,29 @@ export class MoonBallApp {
       return;
     this.engine3DStarted = true;
     this.engine.runRenderLoop(() => {
-      this.blaster3D.updateFrame();
+      if (this.blaster3D)
+        this.blaster3D.updateFrame();
 
       this.scene.render();
     });
   }
   enterXR() {
     this.inXR = true;
+    this.blaster3D.connectGunsInXR();
   }
   enterNotInXR() {
     this.inXR = false;
-
+    if (this.blaster3D)
+      this.blaster3D.connectGunsNotInXR();
   }
   XRControllerAdded(model, handed) {
     if (handed === 'left') {
       this.leftHandedControllerGrip = model.grip;
-      let cylinder = BABYLON.MeshBuilder.CreateCylinder('leftpaddle', {
-        height: 0.25,
-        diameter: 0.15
-      }, this.scene);
-      cylinder.parent = this.leftHandedControllerGrip;
-      cylinder.position = U3D.v(0, 0.2, 0);
-      cylinder.rotation = U3D.v(0, 0, Math.PI / 6);
-
+      this.blaster3D.connectGunsInXR();
     }
     if (handed === 'right') {
       this.rightHandedControllerGrip = model.grip;
+      this.blaster3D.connectGunsInXR();
     }
   }
   paintGameData() {
