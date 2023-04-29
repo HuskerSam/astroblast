@@ -1,5 +1,4 @@
 import U3D from '/utility3d.js';
-const epsilon = 0.00001;
 
 export default class Collision3D {
   constructor(app, count) {

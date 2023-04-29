@@ -2,7 +2,8 @@ import Utility from '/utility.js';
 import U3D from '/utility3d.js';
 import Asteroid3D from '/asteroid3d.js';
 import Collision3D from '/collision3d.js';
-import * as YUKA from './fps/yuka.module.js'
+import Bullet3D from '/bullet3d.js';
+import Blaster3D from '/blaster3d.js';
 
 //import './babylon.js'
 //import './babylonjs.materials.min.js'
@@ -14,23 +15,14 @@ import { Player } from './fps/Player.js'
 import { Target } from './fps/Target.js'
 import { FirstPersonControls } from './fps/FirstPersonControls.js'
 */
-const target = new YUKA.Vector3()
-const intersection = {
-  point: new YUKA.Vector3(),
-  normal: new YUKA.Vector3(),
-}
 
-const entityMatrix = new BABYLON.Matrix()
-const cameraEntityMatrix = new BABYLON.Matrix()
 
 export class MoonBallApp {
   constructor() {
     this.urlParams = new URLSearchParams(window.location.search);
     if (this.urlParams.get('instrumentation'))
       this.instrumentationOn = true;
-
-    this.entityManager = new YUKA.EntityManager()
-    this.time = new YUKA.Time();
+    this.time = new Date();
 
     this.maxBulletHoles = 20
 
@@ -62,6 +54,12 @@ export class MoonBallApp {
   async load() {
     await this.initGraphics();
     await this._initContent3D();
+
+    this.audios = new Map();
+    this.loadAudios();
+
+    this.blaster3D = new Blaster3D(this);
+    await this.blaster3D.load();
 /*
     //this.initScene()
     await this.assetManager.init(this.scene)
@@ -95,6 +93,68 @@ export class MoonBallApp {
     window.addEventListener("resize", () => {
       this.engine.resize();
     });
+  }
+  loadAudios() {
+    const audios = this.audios
+
+    const step1 = new BABYLON.Sound('step1', 'audio/step1.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const step2 = new BABYLON.Sound('step2', 'audio/step2.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const shot = new BABYLON.Sound('shot', 'audio/shot.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const reload = new BABYLON.Sound('reload', 'audio/reload.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const impact1 = new BABYLON.Sound('impact1', 'audio/impact1.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const impact2 = new BABYLON.Sound('impact2', 'audio/impact1.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const impact3 = new BABYLON.Sound('impact3', 'audio/impact1.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const impact4 = new BABYLON.Sound('impact4', 'audio/impact1.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const impact5 = new BABYLON.Sound('impact5', 'audio/impact1.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+    const empty = new BABYLON.Sound('empty', 'audio/empty.ogg', this.scene, null, {
+      loop: false,
+      autoplay: false,
+    })
+
+    shot.setVolume(0.3)
+    reload.setVolume(0.1)
+    empty.setVolume(0.3)
+
+    audios.set('step1', step1)
+    audios.set('step2', step2)
+    audios.set('shot', shot)
+    audios.set('reload', reload)
+    audios.set('impact1', impact1)
+    audios.set('impact2', impact2)
+    audios.set('impact3', impact3)
+    audios.set('impact4', impact4)
+    audios.set('impact5', impact5)
+    audios.set('empty', empty)
+  }
+  sendMessage(name, options) {
+
   }
   async _initContent3D() {
     let startTime = new Date();
