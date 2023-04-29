@@ -43,12 +43,22 @@ export default class Blaster3D {
     this.loadAnimations();
   }
   async load() {
-    const gunMeshes = (await BABYLON.SceneLoader.ImportMeshAsync(null, '/media/', 'gun.glb', this.scene)).meshes;
-    this.weaponMesh = gunMeshes[1];
-    this.weaponMesh.parent = this.app.scene.activeCamera;
-    this.weaponMesh.scaling = U3D.v(0.55);
-    this.weaponMesh.rotation = U3D.v(-Math.PI / 2, 0, Math.PI / 2);
-    this.weaponMesh.position = U3D.v(0, -1.5, 4);
+    let containerPath = '/media/gun.glb';
+    let gunModel = await U3D.loadStaticMesh(this.app.scene, containerPath);
+
+    this.leftWeaponMesh = gunModel.clone();
+    this.leftWeaponMesh.parent = this.app.scene.activeCamera;
+    this.leftWeaponMesh.scaling = U3D.v(0.55);
+    this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
+    this.leftWeaponMesh.position = U3D.v(-0.5, -1.75, 4);
+    this.leftWeaponMesh.setEnabled(true);
+
+    this.rightWeaponMesh = gunModel.clone();
+    this.rightWeaponMesh.parent = this.app.scene.activeCamera;
+    this.rightWeaponMesh.scaling = U3D.v(0.55);
+    this.rightWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
+    this.rightWeaponMesh.position = U3D.v(0.5, -1.75, 4);
+    this.rightWeaponMesh.setEnabled(true);
 
 /*
     const gunMesh = gunMeshes.find((m) => m.name === 'BaseMesh.001')
