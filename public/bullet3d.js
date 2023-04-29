@@ -23,7 +23,8 @@ export default class Bullet3D {
     this.currentTime = 0;
 
     this.sceneBullet = BABYLON.MeshBuilder.CreateSphere("scenebullet", {
-      diameter: 0.5
+      diameter: 0.5,
+      segments: 8
     }, this.app.scene);
     this.sceneBullet.position = U3D.vector(this.origPosition);
     this.sceneBullet.material = new BABYLON.StandardMaterial("sceneBullet", this.app.scene);
@@ -53,6 +54,8 @@ export default class Bullet3D {
   }
   hitObstacle(particle, hitDetails) {
     this.stopMotion = true;
+    this.sceneBullet.material.wireframe = true;
+    this.sceneBullet.scaling = U3D.v(3);
     setTimeout(() => {
       this.app.removeBullet(this);
     }, 500);
