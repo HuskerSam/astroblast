@@ -43,8 +43,15 @@ export default class Blaster3D {
     this.loadAnimations();
   }
   async load() {
-    const gunMeshes = (await BABYLON.SceneLoader.ImportMeshAsync(null, '/media/', 'gun.glb', this.scene)).meshes
-    const gunMesh = gunMeshes.find((m) => m.name === 'BaseMesh')
+    const gunMeshes = (await BABYLON.SceneLoader.ImportMeshAsync(null, '/media/', 'gun.glb', this.scene)).meshes;
+    this.weaponMesh = gunMeshes[1];
+    this.weaponMesh.parent = this.app.scene.activeCamera;
+    this.weaponMesh.scaling = U3D.v(0.55);
+    this.weaponMesh.rotation = U3D.v(-Math.PI / 2, 0, Math.PI / 2);
+    this.weaponMesh.position = U3D.v(0, -1.5, 4);
+
+/*
+    const gunMesh = gunMeshes.find((m) => m.name === 'BaseMesh.001')
     gunMesh.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6)
     gunMesh.position = new BABYLON.Vector3(0, 0, 0.4)
     gunMesh.rotation = new BABYLON.Vector3(0, 0, Math.PI / 2)
@@ -52,6 +59,7 @@ export default class Blaster3D {
     gunMesh.renderingGroupId = 2
     gunMesh.freezeWorldMatrix()
     gunMesh.alwaysSelectAsActiveMesh = true
+    */
   }
   loadAnimations() {
     const animations = this.animations
@@ -232,16 +240,10 @@ export default class Blaster3D {
       this.endTimeMuzzleFire = this.currentTime + this.muzzleFireTime
 
       // create bullet
-
-      const owner = this.owner
-      const head = owner.head
-
-      const ray = new Ray()
+      const ray = new BABYLON.Ray()
 
       // first calculate a ray that represents the actual look direction from the head position
       ray.origin.extractPositionFromMatrix(head.worldMatrix)
-
-      owner.getDirection(ray.direction)
 
       // determine closest intersection point with world object
       const result = U3D.intersectRay(ray, intersectionPoint)
