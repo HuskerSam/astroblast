@@ -31,17 +31,15 @@ export class MoonBallApp {
     this.renderer = null
     this.audios = new Map()
     this.animations = new Map()
+    this.obstacles = new Array();
 
     this.player = null
     this.controls = null
     this.obstacles = new Array()
     this.bulletHoles = new Array()
 
-  //  this.assetManager = new AssetManager()
+    //  this.assetManager = new AssetManager()
 
-    this.animate = animate.bind(this)
-    this.onIntroClick = onIntroClick.bind(this)
-    this.onWindowResize = onWindowResize.bind(this)
 
     this.ui = {
       intro: document.getElementById('intro'),
@@ -60,17 +58,11 @@ export class MoonBallApp {
 
     this.blaster3D = new Blaster3D(this);
     await this.blaster3D.load();
-/*
-    //this.initScene()
-    await this.assetManager.init(this.scene)
-    this.initGround()
-    this.initPlayer()
-    this.initControls()
-    this.initTarget()
-    this.initUI()
 
-    this.animate()
-    */
+    document.querySelector('.hide_loadingscreen').addEventListener('click', e => {
+      BABYLON.Engine.audioEngine.unlock();
+      document.querySelector('.loading_screen').style.display = 'none';
+    });
   }
   async initGraphics() {
     if (this.engine)
@@ -154,7 +146,7 @@ export class MoonBallApp {
     audios.set('empty', empty)
   }
   sendMessage(name, options) {
-
+    console.log('message', name, options)
   }
   async _initContent3D() {
     let startTime = new Date();
@@ -227,7 +219,7 @@ export class MoonBallApp {
     );
     this.photoDome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
     this.photoDome.fovMultiplier = 2.0;
-    this.photoDome.isPickable = false;
+    this.photoDome.mesh.isPickable = false;
 
     this.xr = await scene.createDefaultXRExperienceAsync({});
     this.toggleXRMovementType();
@@ -235,16 +227,10 @@ export class MoonBallApp {
     this.scene.onPointerObservable.add((pointerInfo) => {
       switch (pointerInfo.type) {
         case BABYLON.PointerEventTypes.POINTERDOWN:
-          /*
-            if (pointerInfo.pickInfo.hit) {
-              if (this.pointerDown(pointerInfo))
-                break;
-            }
-            if (pointerInfo.pickInfo.pickedMesh === this.env.ground) {
-              this.groundClick(pointerInfo);
+          if (pointerInfo.pickInfo.hit) {
+            if (this.pointerDown(pointerInfo))
               break;
-            }
-            */
+          }
           break;
         case BABYLON.PointerEventTypes.POINTERUP:
           //this.pointerUp(pointerInfo);
@@ -324,7 +310,18 @@ export class MoonBallApp {
 
     return scene;
   }
+  pointerDown(eventInfo) {
+    if (eventInfo.pickInfo && eventInfo.pickInfo.pickedMesh) {
+      let mesh = U3D.getRootNode(eventInfo.pickInfo.pickedMesh);
 
+      if (mesh.leftWeaponMesh) {
+        this.blaster3D.shoot(true);
+      }
+      if (mesh.rightWeaponMesh) {
+        this.blaster3D.shoot(false);
+      }
+    }
+  }
   addLineToLoading(str) {
     console.log("Loading: ", str);
   }
@@ -355,6 +352,8 @@ export class MoonBallApp {
       return;
     this.engine3DStarted = true;
     this.engine.runRenderLoop(() => {
+      this.blaster3D.updateFrame();
+
       this.scene.render();
     });
   }
@@ -595,61 +594,42 @@ export class MoonBallApp {
     })
   }
 
-  initTarget() {
-    const targetMesh = this.assetManager.models.get('target')
-    this.shadowGenerator.addShadowCaster(targetMesh)
+  updateUI() {
 
-    const vertices = targetMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind)
-    const indices = targetMesh.getIndices()
-
-    const geometry = new YUKA.MeshGeometry(vertices, indices)
-    const target = new Target(geometry)
-    target.position.set(0, 5, -20)
-
-    target.setRenderComponent(targetMesh, sync)
-
-    this.add(target)
   }
-
   initUI() {
     const loadingScreen = this.ui.loadingScreen
 
     loadingScreen.classList.add('fade-out')
     loadingScreen.addEventListener('transitionend', onTransitionEnd)
   }
-}
+  static intersectRay(ray, intersectionPoint, normal = null) {
+    const obstacles = this.obstacles
+    let minDistance = Infinity
+    let closestObstacle = null
 
+    for (let i = 0, l = obstacles.length; i < l; i++) {
+      const obstacle = obstacles[i]
 
-function sync(entity, renderComponent) {
-  renderComponent.getWorldMatrix().copyFrom(BABYLON.Matrix.FromValues(...entity.worldMatrix.elements))
-}
+      if (
+        obstacle.geometry.intersectRay(ray, obstacle.worldMatrix, false, intersection.point, intersection.normal) !==
+        null
+      ) {
+        const squaredDistance = intersection.point.squaredDistanceTo(ray.origin)
 
-// function sync(entity, renderComponent) {
-//   BABYLON.Matrix.FromValues(...entity.worldMatrix.elements).decomposeToTransformNode(renderComponent)
-// }
+        if (squaredDistance < minDistance) {
+          minDistance = squaredDistance
+          closestObstacle = obstacle
 
-function syncCamera(entity, renderComponent) {
-  renderComponent.getViewMatrix().copyFrom(BABYLON.Matrix.FromValues(...entity.worldMatrix.elements).invert())
-}
+          intersectionPoint.copy(intersection.point)
+          if (normal) {
+            normal.copy(intersection.normal)
+          }
+        }
+      }
+    }
 
-function onIntroClick() {
-  if (BABYLON.Engine.audioEngine) {
-    BABYLON.Engine.audioEngine.unlock()
+    return closestObstacle === null ? null : closestObstacle
   }
 
-  this.controls.connect()
-}
-
-function onWindowResize() {
-  this.engine.resize()
-}
-
-function onTransitionEnd(event) {
-  event.target.remove()
-}
-
-function animate() {
-  requestAnimationFrame(this.animate)
-
-  this.update()
 }

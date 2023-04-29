@@ -4,9 +4,6 @@ export default class Blaster3D {
   constructor(app) {
     this.app = app;
 
-    this.position = U3D.v(2, -2, -5);
-    this.rotation = new BABYLON.Quaternion(0, 0, 0, 0);
-
     this.status = STATUS.READY;
 
     this.animations = new Map();
@@ -23,6 +20,7 @@ export default class Blaster3D {
     this.muzzleFireTime = 0.1;
 
     this.currentTime = 0;
+    this.lastTimerTime = Date.now();
     this.endTimeShot = Infinity;
     this.endTimeReload = Infinity;
     this.endTimeMuzzleFire = Infinity;
@@ -35,49 +33,34 @@ export default class Blaster3D {
     sprite.isVisible = false
     this.muzzleSprite = sprite;
 
-    this.ui = {
-      //      roundsLeft: document.getElementById('roundsLeft'),
-      //      ammo: document.getElementById('ammo'),
-    }
 
-    this.loadAnimations();
   }
   async load() {
     let containerPath = '/media/gun.glb';
     let gunModel = await U3D.loadStaticMesh(this.app.scene, containerPath);
 
-    this.leftWeaponMesh = gunModel.clone();
+    this.leftWeaponMesh = gunModel.clone('leftWeaponMesh');
     this.leftWeaponMesh.parent = this.app.scene.activeCamera;
     this.leftWeaponMesh.scaling = U3D.v(0.55);
     this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
     this.leftWeaponMesh.position = U3D.v(-0.5, -1.75, 4);
     this.leftWeaponMesh.setEnabled(true);
+    this.leftWeaponMesh.leftWeaponMesh = true;
+    this.leftWeaponMesh.u3dRootNode = true;
 
-    this.rightWeaponMesh = gunModel.clone();
+    this.rightWeaponMesh = gunModel.clone('rightWeaponMesh');
     this.rightWeaponMesh.parent = this.app.scene.activeCamera;
     this.rightWeaponMesh.scaling = U3D.v(0.55);
     this.rightWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
     this.rightWeaponMesh.position = U3D.v(0.5, -1.75, 4);
     this.rightWeaponMesh.setEnabled(true);
+    this.rightWeaponMesh.rightWeaponMesh = true;
+    this.rightWeaponMesh.u3dRootNode = true;
 
-/*
-    const gunMesh = gunMeshes.find((m) => m.name === 'BaseMesh.001')
-    gunMesh.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6)
-    gunMesh.position = new BABYLON.Vector3(0, 0, 0.4)
-    gunMesh.rotation = new BABYLON.Vector3(0, 0, Math.PI / 2)
-    gunMesh.bakeCurrentTransformIntoVertices()
-    gunMesh.renderingGroupId = 2
-    gunMesh.freezeWorldMatrix()
-    gunMesh.alwaysSelectAsActiveMesh = true
-    */
+    this.loadAnimations();
   }
-  loadAnimations() {
-    const animations = this.animations
-    // shot
-    const frameRate = 1
-
-    // shoot
-
+  animateShoot(weaponMesh) {
+    const frameRate = 60
     const frameTimingShot = [0, 0.05, 0.15, 0.3].map((v) => frameRate * v)
     const shotPositionAnimation = new BABYLON.Animation(
       'shoot-position',
@@ -87,7 +70,7 @@ export default class Blaster3D {
       BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE
     )
 
-    const startPosition = new BABYLON.Vector3(this.position.x, this.position.y, this.position.z)
+    const startPosition = U3D.vector(weaponMesh.position);
     const shotPositionKeyFrames = []
     shotPositionKeyFrames.push({
       frame: frameTimingShot[0],
@@ -95,11 +78,11 @@ export default class Blaster3D {
     })
     shotPositionKeyFrames.push({
       frame: frameTimingShot[1],
-      value: new BABYLON.Vector3(startPosition.x + 0.6, startPosition.y + 0.4, startPosition.z + 1.4),
+      value: new BABYLON.Vector3(startPosition.x + 0.1, startPosition.y + 0.2, startPosition.z - 0.7),
     })
     shotPositionKeyFrames.push({
       frame: frameTimingShot[2],
-      value: new BABYLON.Vector3(startPosition.x + 0.6, startPosition.y + 0.61, startPosition.z + 2),
+      value: new BABYLON.Vector3(startPosition.x + 0.1, startPosition.y + 0.3, startPosition.z - 1),
     })
     shotPositionKeyFrames.push({
       frame: frameTimingShot[3],
@@ -111,31 +94,45 @@ export default class Blaster3D {
       'shoot-rotation',
       'rotation',
       frameRate,
-      BABYLON.Animation.ANIMATIONTYPE_QUATERNION,
+      BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
       BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE
     )
     const shotRotationKeyFrames = []
 
+    const startRotation = U3D.vector(weaponMesh.rotation);
+    const endRotation = U3D.vector(weaponMesh.rotation);
     shotRotationKeyFrames.push({
       frame: frameTimingShot[0],
-      value: new BABYLON.Quaternion(this.rotation.x, this.rotation.y, this.rotation.z, this.rotation.w),
-    })
+      value: startRotation,
+    });
+    startRotation.addInPlace(U3D.v(-0.12, 0, 0))
     shotRotationKeyFrames.push({
       frame: frameTimingShot[1],
-      value: BABYLON.Quaternion.FromEulerAngles(-0.12, 0, 0),
-    })
+      value: startRotation,
+    });
+    startRotation.addInPlace(U3D.v(0.12, 0, 0))
     shotRotationKeyFrames.push({
       frame: frameTimingShot[2],
-      value: BABYLON.Quaternion.FromEulerAngles(0.12, 0, 0),
-    })
+      value: startRotation,
+    });
     shotRotationKeyFrames.push({
       frame: frameTimingShot[3],
-      value: new BABYLON.Quaternion(),
-    })
-    shotRotationAnimation.setKeys(shotRotationKeyFrames)
+      value: endRotation,
+    });
+    shotRotationAnimation.setKeys(shotRotationKeyFrames);
 
-    animations.set('shootPosition', shotPositionAnimation)
-    animations.set('shootRotation', shotRotationAnimation)
+    const scene = this.app.scene;
+    scene.beginDirectAnimation(weaponMesh, [shotPositionAnimation, shotRotationAnimation], 0, 600, false);
+  }
+  loadAnimations() {
+    const animations = this.animations
+    // shot
+    const frameRate = 60
+    const startPosition = U3D.vector(this.leftWeaponMesh.position);
+
+    // shoot
+
+    const frameTimingShot = [0, 0.05, 0.15, 0.3].map((v) => frameRate * v)
 
     // reload
 
@@ -223,7 +220,8 @@ export default class Blaster3D {
     return this
   }
 
-  shoot() {
+  shoot(leftGun = true) {
+    let weaponMesh = this.leftWeaponMesh;
     if (this.status === STATUS.READY) {
       this.status = STATUS.SHOT
 
@@ -236,11 +234,7 @@ export default class Blaster3D {
       audio.play()
 
       // animation
-
-      const shootPositionAnimation = this.animations.get('shootPosition')
-      const shootRotationAnimation = this.animations.get('shootRotation')
-      const scene = this.app.scene;
-      scene.beginDirectAnimation(this, [shootPositionAnimation, shootRotationAnimation], 0, 60, false)
+      this.animateShoot(weaponMesh);
 
       // muzzle fire
 
@@ -253,26 +247,26 @@ export default class Blaster3D {
       const ray = new BABYLON.Ray()
 
       // first calculate a ray that represents the actual look direction from the head position
-      ray.origin.extractPositionFromMatrix(head.worldMatrix)
+      ray.origin = U3D.vector(weaponMesh.position);
 
       // determine closest intersection point with world object
-      const result = U3D.intersectRay(ray, intersectionPoint)
+      const result = this.app.intersectRay(ray, this.intersectionPoint)
 
       // now calculate the distance to the closest intersection point. if no point was found,
       // choose a point on the ray far away from the origin
       const distance = result === null ? 1000 : ray.origin.distanceTo(intersectionPoint)
 
       // now let's change the origin to the weapon's position.
-      target.copy(ray.origin).add(ray.direction.multiplyScalar(distance))
-      ray.origin.extractPositionFromMatrix(this.worldMatrix)
+      //this.app.target.copy(ray.origin).add(ray.direction.multiplyScalar(distance))
+      //ray.origin.extractPositionFromMatrix(this.worldMatrix)
       ray.origin.x -= 0.25
       ray.origin.y += 1.4
-      ray.direction.subVectors(target, ray.origin).normalize()
-      this.app.addBullet(owner, ray)
+      //ray.direction.subVectors(this.app.target, ray.origin).normalize()
+      //  this.app.addBullet(owner, ray)
 
-      this.muzzleSprite.position.x = ray.origin.x - 0.2
-      this.muzzleSprite.position.y = ray.origin.y + 0.2
-      this.muzzleSprite.position.z = ray.origin.z
+      this.muzzleSprite.position.x = weaponMesh.position.x - 0.2
+      this.muzzleSprite.position.y = weaponMesh.position.y + 0.2
+      this.muzzleSprite.position.z = weaponMesh.position.z
 
       // adjust ammo
 
@@ -292,8 +286,14 @@ export default class Blaster3D {
     return this
   }
 
-  updateFrame(timeDelta) {
-    this.currentTime += delta
+  updateFrame(timeDelta = null) {
+    if (timeDelta !== null)
+      this.currentTime += timeDelta;
+    else {
+      let newLastTime = Date.now();
+      this.currentTime = newLastTime - this.lastTimerTime;
+      this.lastTimerTime = newLastTime;
+    }
 
     // check reload
     if (this.currentTime >= this.endTimeReload) {

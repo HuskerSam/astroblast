@@ -9,7 +9,7 @@ export default class Bullet3D {
     this.normal = U3D.v(0);
     this.currentRay = new BABYLON.Ray(ray.origin, ray.direction, ray.length);
 
-    this.maxSpeed = 400 // 400 m/s
+    this.maxSpeed = 40 // 40 m/s
 
     this.position.copy(ray.origin)
     this.velocity.copy(ray.direction).multiplyScalar(this.maxSpeed)

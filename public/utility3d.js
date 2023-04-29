@@ -495,35 +495,14 @@ export default class Utility3D {
       rotations
     };
   }
-  static intersectRay(ray, intersectionPoint, normal = null) {
-    const obstacles = this.obstacles
-    let minDistance = Infinity
-    let closestObstacle = null
 
-    for (let i = 0, l = obstacles.length; i < l; i++) {
-      const obstacle = obstacles[i]
-
-      if (
-        obstacle.geometry.intersectRay(ray, obstacle.worldMatrix, false, intersection.point, intersection.normal) !==
-        null
-      ) {
-        const squaredDistance = intersection.point.squaredDistanceTo(ray.origin)
-
-        if (squaredDistance < minDistance) {
-          minDistance = squaredDistance
-          closestObstacle = obstacle
-
-          intersectionPoint.copy(intersection.point)
-          if (normal) {
-            normal.copy(intersection.normal)
-          }
-        }
-      }
-    }
-
-    return closestObstacle === null ? null : closestObstacle
+  static getRootNode(node) {
+    if (node.u3dRootNode)
+      return node;
+    if (node.parent)
+      return Utility3D.getRootNode(node.parent);
+    return node;
   }
-
   static amplitudeRange(vVector, minAmp, maxAmp) {
     let amp = Math.sqrt(vVector.x * vVector.x + vVector.y * vVector.y + vVector.z * vVector.z);
     if (amp < minAmp) {

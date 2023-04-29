@@ -106,6 +106,7 @@ export default class Asteroid3D {
     mesh.setEnabled(true);
 
     mesh.material = this.asteroidMaterial;
+    mesh.isPickable = false;
 
     return mesh;
   }
