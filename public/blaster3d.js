@@ -22,15 +22,6 @@ export default class Blaster3D {
     this.endTimeReload = Infinity;
     this.endTimeMuzzleFire = Infinity;
 
-    const spritemanager = new BABYLON.SpriteManager('sprite-manager', 'media/muzzle.png', 1, 128, this.app.scene)
-    spritemanager.renderingGroupId = 1
-    const sprite = new BABYLON.Sprite('muzzle', spritemanager)
-    sprite.position = new BABYLON.Vector3(0, 0.13, -0.4)
-    sprite.scaling = new BABYLON.Vector3(0.3, 0.3, 0.3)
-    sprite.isVisible = false
-    this.muzzleSprite = sprite;
-
-
   }
   async load() {
     let containerPath = '/media/gun.glb';
@@ -45,6 +36,15 @@ export default class Blaster3D {
     this.leftWeaponMesh.setEnabled(true);
     this.leftWeaponMesh.leftWeaponMesh = true;
     this.leftWeaponMesh.u3dRootNode = true;
+    /*
+   this.leftWeaponTip = BABYLON.MeshBuilder.CreateSphere('leftWeaponTip', {
+    diameter: 0.5
+  }, this.app.scene);
+  */
+    this.leftWeaponTip = new BABYLON.TransformNode('leftWeaponTip', this.app.scene);
+    this.leftWeaponTip.parent = this.leftWeaponMesh;
+    this.leftWeaponTip.position = U3D.v(-2, 2.15, 0);
+    this.leftWeaponMesh.weaponTip = this.leftWeaponTip;
 
     this.rightWeaponMesh = gunModel.clone('rightWeaponMesh');
     this.rightWeaponMesh.parent = this.app.scene.activeCamera;
@@ -55,6 +55,24 @@ export default class Blaster3D {
     this.rightWeaponMesh.setEnabled(true);
     this.rightWeaponMesh.rightWeaponMesh = true;
     this.rightWeaponMesh.u3dRootNode = true;
+    this.rightWeaponTip = new BABYLON.TransformNode('rightWeaponTip', this.app.scene);
+    /*
+        this.rightWeaponMeshTip = BABYLON.MeshBuilder.CreateSphere('rightWeaponMeshTip', {
+         diameter: 0.5
+       }, this.app.scene);
+       */
+    this.rightWeaponTip.parent = this.rightWeaponMesh;
+    this.rightWeaponTip.position = U3D.v(-2, 2.15, 0);
+    this.rightWeaponMesh.weaponTip = this.rightWeaponTip;
+
+
+    const spritemanager = new BABYLON.SpriteManager('sprite-manager', 'media/muzzle.png', 1, 128, this.app.scene)
+    spritemanager.renderingGroupId = 1
+    const leftSprite = new BABYLON.Sprite('muzzle', spritemanager)
+    leftSprite.scaling = U3D.v(0.02);
+    leftSprite.isVisible = false
+    this.muzzleSprite = leftSprite;
+
 
     this.loadAnimations();
   }
@@ -245,16 +263,19 @@ export default class Blaster3D {
 
       // muzzle fire
 
-      this.muzzleSprite.isVisible = true
-      this.muzzleSprite.angle = Math.random() * Math.PI
-
       this.endTimeMuzzleFire = this.muzzleFireTime
 
       // create bullet
       const ray = new BABYLON.Ray()
 
       // first calculate a ray that represents the actual look direction from the head position
-      ray.origin = U3D.vector(weaponMesh.position);
+      let weaponTip = weaponMesh.weaponTip.getAbsolutePosition();
+      console.log(weaponTip);
+      // weaponTip.x -= 0.25;
+      //  weaponTip.y += 3.4;
+      //  weaponTip.z += 10;
+
+      ray.origin = U3D.vector(weaponTip);
 
       // determine closest intersection point with world object
       const result = this.app.intersectRay(ray, this.intersectionPoint)
@@ -263,18 +284,11 @@ export default class Blaster3D {
       // choose a point on the ray far away from the origin
       const distance = result === null ? 1000 : ray.origin.distanceTo(intersectionPoint)
 
-      // now let's change the origin to the weapon's position.
-      //this.app.target.copy(ray.origin).add(ray.direction.multiplyScalar(distance))
-      //ray.origin.extractPositionFromMatrix(this.worldMatrix)
-      ray.origin.x -= 0.25
-      ray.origin.y += 1.4
-      //ray.direction.subVectors(this.app.target, ray.origin).normalize()
-      //  this.app.addBullet(owner, ray)
 
-      this.muzzleSprite.position.x = weaponMesh.position.x - 0.2
-      this.muzzleSprite.position.y = weaponMesh.position.y + 0.2
-      this.muzzleSprite.position.z = weaponMesh.position.z
-
+      this.muzzleSprite.position = U3D.vector(weaponTip);
+      this.muzzleSprite.isVisible = true;
+      this.muzzleSprite.angle = Math.random() * Math.PI;
+      console.log(this.muzzleSprite);
       // adjust ammo
 
       this.roundsLeft--
@@ -320,7 +334,6 @@ export default class Blaster3D {
 
     if (timeElapsed >= this.endTimeMuzzleFire) {
       this.muzzleSprite.isVisible = false
-
       this.endTimeMuzzleFire = Infinity
     }
 
