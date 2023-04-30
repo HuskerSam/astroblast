@@ -60,6 +60,7 @@ export class MoonBallApp {
     this.blaster3D = new Blaster3D(this);
     await this.blaster3D.load();
 
+    document.querySelector('.hide_loadingscreen').innerHTML = "Play!";
     document.querySelector('.hide_loadingscreen').addEventListener('click', e => {
       BABYLON.Engine.audioEngine.unlock();
       document.querySelector('.loading_screen').style.display = 'none';
