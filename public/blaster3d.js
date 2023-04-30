@@ -30,9 +30,10 @@ export default class Blaster3D {
 
   }
   connectGunsInXR() {
-    this.leftWeaponMesh.parent = this.app.leftHandedControllerGrip;
+    this.leftWeaponTN.parent = this.app.leftHandedControllerGrip;
     this.leftWeaponMesh.scaling = U3D.v(0.1);
     this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2, 0, 0);
+    this.leftWeaponTN.rotation = U3D.v(0, Math.PI / 2, 0, 0);
     this.leftWeaponMesh.position = U3D.v(0);
     this.leftWeaponMesh.origposition = U3D.v(0);
 
@@ -46,7 +47,7 @@ export default class Blaster3D {
     this.rightWeaponMesh.origposition = U3D.v(0);
   }
   connectGunsNotInXR() {
-    this.leftWeaponMesh.parent = this.app.scene.activeCamera;
+    this.leftWeaponTN.parent = this.app.scene.activeCamera;
     this.leftWeaponMesh.scaling = U3D.v(0.55);
     this.leftWeaponMesh.rotation = U3D.v(0, Math.PI / 2 + 0.0125, 0, 0);
     this.leftWeaponMesh.position = U3D.v(-0.5, -1.75, 4);
@@ -63,10 +64,11 @@ export default class Blaster3D {
     let gunModel = await U3D.loadStaticMesh(this.app.scene, containerPath);
 
     this.leftWeaponMesh = gunModel.clone('leftWeaponMesh');
-
     this.leftWeaponMesh.setEnabled(true);
+    this.leftWeaponTN = new BABYLON.TransformNode('leftWeaponTN', this.app.scene)
     this.leftWeaponMesh.leftWeaponMesh = true;
     this.leftWeaponMesh.u3dRootNode = true;
+    this.leftWeaponMesh.parent = this.leftWeaponTN;
 
     this.leftMuzzleTip = new BABYLON.TransformNode('leftMuzzleTip', this.app.scene);
     this.leftMuzzleTip.parent = this.leftWeaponMesh;

@@ -18,16 +18,17 @@ export default class Collision3D {
 
     let SPS = new BABYLON.SolidParticleSystem('SPS', scene, {
       particleIntersection: true,
-      useModelMaterial: true,
-      expandable: true
+      useModelMaterial: true
     });
     let promises = [];
+    this.asteroidNames = {};
     let loadAsteroid = async (SPSystem, index) => {
       let asteroidNameIndex = this.app.asteroidHelper.randomArray[index];
       let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
       let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
       //console.log(asteroid);
-      SPSystem.addShape(asteroid, 1);
+      let shapeId = SPSystem.addShape(asteroid, 1);
+      this.asteroidNames[shapeId] = asteroidName;
       asteroid.dispose();
     };
 

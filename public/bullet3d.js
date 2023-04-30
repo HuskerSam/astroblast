@@ -35,14 +35,17 @@ export default class Bullet3D {
     this.sceneBullet.material.emissiveColor = color;
   }
   dispose() {
-    this.sceneBullet.dispose();
+    if (this.sceneBullet)
+      this.sceneBullet.dispose();
+    if (this.asteroidMesh)
+      this.asteroidMesh.dispose();
   }
 
   updateFrame() {
     let newLastTime = Date.now();
     let timeElapsed = newLastTime - this.lastShotTime;
 
-    if (!this.stopMotion) {
+    if (!this.beenHit) {
       this.sceneBullet.position.x += this.velocity.x;
       this.sceneBullet.position.y += this.velocity.y;
       this.sceneBullet.position.z += this.velocity.z;
@@ -52,10 +55,22 @@ export default class Bullet3D {
       this.app.removeBullet(this);
     }
   }
-  hitObstacle(particle, hitDetails) {
-    this.stopMotion = true;
+  async hitObstacle(particle, position, rotation, asteroidName) {
+    this.beenHit = true;
     this.sceneBullet.material.wireframe = true;
-    this.sceneBullet.scaling = U3D.v(3);
+
+    let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.app.collisionHelper.particleRadius * 4);
+
+    asteroid.position = position;
+    asteroid.rotation = rotation;
+    this.asteroidMesh = asteroid;
+
+    asteroid.material = this.sceneBullet.material;
+    this.sceneBullet.material = new BABYLON.StandardMaterial('hitcolor', this.app.scene);
+    this.sceneBullet.material.wireframe = true;
+    this.sceneBullet.material.diffuseColor = new BABYLON.Color3(0, 1, 0);
+    this.sceneBullet.material.emissiveColor = new BABYLON.Color3(0, 1, 0);
+
     setTimeout(() => {
       this.app.removeBullet(this);
     }, 500);

@@ -600,15 +600,21 @@ export class MoonBallApp {
   }
   checkParticleForCollision(particle) {
     this.activeBullets.forEach(bullet => {
+      if (bullet.beenHit)
+        return;
 
       let hit = particle.intersectsMesh(bullet.sceneBullet);
       if (hit) {
         if (!particle.beenHit) {
-
           particle.beenHit = true;
-          particle.position = U3D.v(100000, 100000, 100000);
+          bullet.beenHit = true;
 
-          bullet.hitObstacle(particle, hit);
+          let rotation = U3D.vector(particle.rotation);
+          let position = U3D.vector(particle.position);
+
+          particle.position = U3D.v(100000, 100000, 100000);
+          let asteroidName = this.collisionHelper.asteroidNames[particle.shapeId];
+          bullet.hitObstacle(particle, position, rotation, asteroidName);
         }
       }
     });
