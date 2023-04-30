@@ -587,6 +587,7 @@ export class MoonBallApp {
         if (squaredDistance < minDistance) {
           minDistance = squaredDistance
           closestObstacle = obstacle
+          closestObstacle.lastIntersection = intersection;
 
           intersectionPoint.copy(intersection.point)
           if (normal) {
@@ -608,6 +609,10 @@ export class MoonBallApp {
         if (!particle.beenHit) {
           particle.beenHit = true;
           bullet.beenHit = true;
+
+          particle.position.x += particle.velocity.x;
+          particle.position.y += particle.velocity.y;
+          particle.position.z += particle.velocity.z;
 
           let rotation = U3D.vector(particle.rotation);
           let position = U3D.vector(particle.position);
