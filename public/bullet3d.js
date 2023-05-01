@@ -24,7 +24,7 @@ export default class Bullet3D {
 
     this.sceneBullet = BABYLON.MeshBuilder.CreateSphere("scenebullet", {
       diameter: 0.5,
-      segments: 8
+      segments: 4
     }, this.app.scene);
     this.sceneBullet.position = U3D.vector(this.origPosition);
     this.sceneBullet.material = new BABYLON.StandardMaterial("sceneBullet", this.app.scene);
@@ -69,11 +69,13 @@ export default class Bullet3D {
     asteroid.rotation = rotation;
     this.asteroidMesh = asteroid;
 
-    asteroid.material = this.sceneBullet.material;
+    asteroid.material = this.app.fireShaderMaterial;
+    /*
     this.sceneBullet.material = new BABYLON.StandardMaterial('hitcolor', this.app.scene);
-    this.sceneBullet.material.wireframe = true;
     this.sceneBullet.material.diffuseColor = new BABYLON.Color3(0, 1, 0);
     this.sceneBullet.material.emissiveColor = new BABYLON.Color3(0, 1, 0);
+    */
+    this.sceneBullet.material.wireframe = true;
     this.sceneBullet.position.addInPlace(push);
 
     const audio = this.app.audios.get('impact' + (Math.floor(Math.random () * 5) + 1).toString());
@@ -84,8 +86,16 @@ export default class Bullet3D {
     audio.attachToMesh(this.sceneBullet);
     audio.play()
 
+    let scaling = asteroid.scaling.x;
+    this.sceneBullet.setEnabled(false);
+    let interval = setInterval(() => {
+      scaling *= 0.98;
+      asteroid.scaling = U3D.v(scaling);
+    //  this.sceneBullet.scaling = U3D.v(scaling);
+    }, 10);
     setTimeout(() => {
       this.app.removeBullet(this);
-    }, 500);
+      clearInterval(interval);
+    }, 800);
   }
 }

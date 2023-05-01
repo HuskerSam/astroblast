@@ -37,7 +37,7 @@ export class MoonBallApp {
     this.player = null
     this.controls = null
     this.obstacles = new Array()
-    this.bulletHoles = new Array()
+    this.bulletHoles = new Array();
 
     //  this.assetManager = new AssetManager()
 
@@ -59,6 +59,9 @@ export class MoonBallApp {
 
     this.blaster3D = new Blaster3D(this);
     await this.blaster3D.load();
+
+    this.fireShaderMaterial = U3D.fireShaderMaterial(this.scene);
+    this.fireShaderMaterial.wireframe = true;
 
     document.querySelector('.hide_loadingscreen').innerHTML = "Play!";
     document.querySelector('.hide_loadingscreen').addEventListener('click', e => {
@@ -416,27 +419,6 @@ export class MoonBallApp {
       this.activeBullets[bIndex].dispose();
       this.activeBullets.splice(bIndex, 1);
     }
-  }
-
-  addBulletHole(position, normal, audio) {
-    const bulletHole = this.assetManager.models.get('bulletHole').clone('bullet-hole' + this.bulletHoles.length)
-    bulletHole.setEnabled(true)
-    audio.attachToMesh(bulletHole)
-
-    const s = 1 + Math.random() * 0.5
-    bulletHole.scaling = new BABYLON.Vector3(s, s, s)
-    bulletHole.position = new BABYLON.Vector3(position.x, position.y, position.z)
-
-    target.copy(position).add(normal)
-
-    bulletHole.lookAt(new BABYLON.Vector3(target.x, target.y, target.z))
-
-    if (this.bulletHoles.length >= this.maxBulletHoles) {
-      const toRemove = this.bulletHoles.shift()
-      toRemove.dispose()
-    }
-
-    this.bulletHoles.push(bulletHole)
   }
 
   intersectRay(ray, intersectionPoint, normal = null) {
