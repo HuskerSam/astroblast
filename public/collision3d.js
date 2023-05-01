@@ -27,6 +27,11 @@ export default class Collision3D {
       let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
       let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
       //console.log(asteroid);
+      if (index % 15 === 0)
+        asteroid.material = this.app.asteroidHelper.asteroidMaterialRed;
+      if (index % 15 === 1)
+        asteroid.material = this.app.asteroidHelper.asteroidMaterialBlue;
+
       let shapeId = SPSystem.addShape(asteroid, 1);
       this.asteroidNames[shapeId] = asteroidName;
       asteroid.dispose();
@@ -119,7 +124,7 @@ export default class Collision3D {
             q.velocity.z += vdotn * nz;
 
             U3D.amplitudeRange(q.velocity, this.particleMin, this.particleMax);
-            U3D.amplitudeRange(particle.velocity,  this.particleMin, this.particleMax);
+            U3D.amplitudeRange(particle.velocity, this.particleMin, this.particleMax);
 
             //position correction
             particle.position.x += vdotn * nx * t;
