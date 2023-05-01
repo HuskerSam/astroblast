@@ -60,8 +60,7 @@ export class MoonBallApp {
     this.blaster3D = new Blaster3D(this);
     await this.blaster3D.load();
 
-    this.fireShaderMaterial = U3D.fireShaderMaterial(this.scene);
-    this.fireShaderMaterial.wireframe = true;
+    this.initHitShaders();
 
     document.querySelector('.hide_loadingscreen').innerHTML = "Play!";
     document.querySelector('.hide_loadingscreen').addEventListener('click', e => {
@@ -606,5 +605,189 @@ export class MoonBallApp {
         }
       }
     });
+  }
+  initHitShaders() {
+    let fragmentSourceRed =
+      `precision highp float;
+      varying vec2 vUV;
+
+      uniform sampler2D textureSampler;
+      uniform float time;
+      uniform mat4 worldView;
+      varying vec4 vPosition;
+      varying vec3 vNormal;
+      // Uniforms
+      uniform mat4 view;
+      uniform vec3 cameraPosition;
+      uniform vec3 viewportPosition;
+
+      float snoise(vec3 uv, float res)
+      {
+      const vec3 s = vec3(1e0, 1e2, 1e3);
+
+      uv *= res;
+
+      vec3 uv0 = floor(mod(uv, res))*s;
+      vec3 uv1 = floor(mod(uv+vec3(1.), res))*s;
+
+      vec3 f = fract(uv); f = f*f*(3.0-2.0*f);
+
+      vec4 v = vec4(uv0.x+uv0.y+uv0.z, uv1.x+uv0.y+uv0.z,
+                  uv0.x+uv1.y+uv0.z, uv1.x+uv1.y+uv0.z);
+
+      vec4 r = fract(sin(v*1e-1)*1e3);
+      float r0 = mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y);
+
+      r = fract(sin((v + uv1.z - uv0.z)*1e-1)*1e3);
+      float r1 = mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y);
+
+      return mix(r0, r1, f.z)*2.-1.;
+      }
+
+      void main(void) {
+
+        vec3 e = normalize( vec3( worldView * vPosition ) );
+        vec2 uv = vUV.xy;
+
+      vec2 p = -.5 + vUV.xy;
+
+      float color = 3.0 - (3.*length(2.*p));
+
+      vec3 coord = vec3(atan(p.x,p.y)/6.2832+.5, length(p)*.4, .5);
+
+      for(int i = 1; i <= 7; i++)
+      {
+        float power = pow(2.0, float(i));
+        color += (1.5 / power) * snoise(coord + vec3(0.,-time*.05, time*.01), power*16.);
+      }
+        gl_FragColor = vec4( color, pow(max(color,0.),2.)*0.4, pow(max(color,0.),3.)*0.15 , 1.0);
+      }`;
+
+    let vertexSourceRed =
+      `precision highp float;
+      // Attributes
+      attribute vec3 position;
+      attribute vec3 normal;
+      attribute vec2 uv;
+
+      // Uniforms
+      uniform mat4 worldViewProjection;
+
+      // Varying
+      varying vec4 vPosition;
+      varying vec3 vNormal;
+      varying vec2 vUV;
+
+      void main(void) {
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+
+        vUV = uv;
+      }`;
+    this.redHitShaderMaterial = new BABYLON.ShaderMaterial("shader", this.scene, {
+      vertexSource: vertexSourceRed,
+      fragmentSource: fragmentSourceRed,
+    }, {
+      attributes: ["position", "normal", "uv"],
+      uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+    });
+
+    this.redHitShaderMaterial.setFloat("time", 0);
+    this.redHitShaderMaterial.backFaceCulling = false;
+    this.redHitShaderMaterial.wireframe = true;
+
+    let fragmentSourceBlue =
+      `precision highp float;
+      varying vec2 vUV;
+
+      uniform sampler2D textureSampler;
+      uniform float time;
+      uniform mat4 worldView;
+      varying vec4 vPosition;
+      varying vec3 vNormal;
+      // Uniforms
+      uniform mat4 view;
+      uniform vec3 cameraPosition;
+      uniform vec3 viewportPosition;
+
+      float snoise(vec3 uv, float res)
+      {
+      const vec3 s = vec3(1e0, 1e2, 1e3);
+
+      uv *= res;
+
+      vec3 uv0 = floor(mod(uv, res))*s;
+      vec3 uv1 = floor(mod(uv+vec3(1.), res))*s;
+
+      vec3 f = fract(uv); f = f*f*(3.0-2.0*f);
+
+      vec4 v = vec4(uv0.x+uv0.y+uv0.z, uv1.x+uv0.y+uv0.z,
+                  uv0.x+uv1.y+uv0.z, uv1.x+uv1.y+uv0.z);
+
+      vec4 r = fract(sin(v*1e-1)*1e3);
+      float r0 = mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y);
+
+      r = fract(sin((v + uv1.z - uv0.z)*1e-1)*1e3);
+      float r1 = mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y);
+
+      return mix(r0, r1, f.z)*2.-1.;
+      }
+
+      void main(void) {
+
+        vec3 e = normalize( vec3( worldView * vPosition ) );
+        vec2 uv = vUV.xy;
+
+      vec2 p = -.5 + vUV.xy;
+
+      float color = 3.0 - (3.*length(2.*p));
+
+      vec3 coord = vec3(atan(p.x,p.y)/6.2832+.5, length(p)*.4, .5);
+
+      for(int i = 1; i <= 7; i++)
+      {
+        float power = pow(2.0, float(i));
+        color += (1.5 / power) * snoise(coord + vec3(0.,-time*.05, time*.01), power*16.);
+      }
+        gl_FragColor = vec4( pow(max(color,0.),3.)*0.15, pow(max(color,0.),2.)*0.4, color, 1.0);
+      }`;
+
+    let vertexSourceBlue =
+      `precision highp float;
+      // Attributes
+      attribute vec3 position;
+      attribute vec3 normal;
+      attribute vec2 uv;
+
+      // Uniforms
+      uniform mat4 worldViewProjection;
+
+      // Varying
+      varying vec4 vPosition;
+      varying vec3 vNormal;
+      varying vec2 vUV;
+
+      void main(void) {
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+
+        vUV = uv;
+      }`;
+    this.blueHitShaderMaterial = new BABYLON.ShaderMaterial("shader", this.scene, {
+      vertexSource: vertexSourceBlue,
+      fragmentSource: fragmentSourceBlue,
+    }, {
+      attributes: ["position", "normal", "uv"],
+      uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+    });
+
+    this.blueHitShaderMaterial.setFloat("time", 0);
+    this.blueHitShaderMaterial.backFaceCulling = false;
+    this.blueHitShaderMaterial.wireframe = true;
+
+    let time = 0;
+    setInterval(() => {
+      time += 0.1;
+      this.redHitShaderMaterial.setFloat("time", time);
+      this.blueHitShaderMaterial.setFloat("time", time);
+    }, 10);
   }
 }

@@ -28,9 +28,11 @@ export default class Bullet3D {
     }, this.app.scene);
     this.sceneBullet.position = U3D.vector(this.origPosition);
     this.sceneBullet.material = new BABYLON.StandardMaterial("sceneBullet", this.app.scene);
-    let color =  new BABYLON.Color3(1, 0, 0);
-    if (this.weaponMesh.rightWeaponMesh)
+    let color = new BABYLON.Color3(1, 0, 0);
+    if (this.weaponMesh.rightWeaponMesh) {
+      this.sceneBullet.isBlue = true;
       color = new BABYLON.Color3(0, 0, 1);
+    }
     this.sceneBullet.material.diffuseColor = color;
     this.sceneBullet.material.emissiveColor = color;
   }
@@ -69,7 +71,10 @@ export default class Bullet3D {
     asteroid.rotation = rotation;
     this.asteroidMesh = asteroid;
 
-    asteroid.material = this.app.fireShaderMaterial;
+    if (this.sceneBullet.isBlue)
+      asteroid.material = this.app.blueHitShaderMaterial;
+    else
+      asteroid.material = this.app.redHitShaderMaterial;
     /*
     this.sceneBullet.material = new BABYLON.StandardMaterial('hitcolor', this.app.scene);
     this.sceneBullet.material.diffuseColor = new BABYLON.Color3(0, 1, 0);
@@ -78,7 +83,7 @@ export default class Bullet3D {
     this.sceneBullet.material.wireframe = true;
     this.sceneBullet.position.addInPlace(push);
 
-    const audio = this.app.audios.get('impact' + (Math.floor(Math.random () * 5) + 1).toString());
+    const audio = this.app.audios.get('impact' + (Math.floor(Math.random() * 5) + 1).toString());
 
     if (audio.isPlaying === true) {
       audio.stop()
@@ -91,7 +96,7 @@ export default class Bullet3D {
     let interval = setInterval(() => {
       scaling *= 0.98;
       asteroid.scaling = U3D.v(scaling);
-    //  this.sceneBullet.scaling = U3D.v(scaling);
+      //  this.sceneBullet.scaling = U3D.v(scaling);
     }, 10);
     setTimeout(() => {
       this.app.removeBullet(this);
