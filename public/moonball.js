@@ -165,9 +165,11 @@ export class MoonBallApp {
     this.collisionHelper = new Collision3D(this, count);
     await this.collisionHelper.init();
 
-    this.xr.baseExperience.camera.onBeforeCameraTeleport.add(() => {
-      this.clearActiveFollowMeta();
-    });
+    if (this.xr) {
+      this.xr.baseExperience.camera.onBeforeCameraTeleport.add(() => {
+        this.clearActiveFollowMeta();
+      });
+    }
 
     this.paintedBoardTurn = this.turnNumber;
     this.startEngine();
@@ -225,8 +227,13 @@ export class MoonBallApp {
     this.photoDome.fovMultiplier = 2.0;
     this.photoDome.mesh.isPickable = false;
 
-    this.xr = await scene.createDefaultXRExperienceAsync({});
-    this.toggleXRMovementType();
+    try {
+      this.xr = await scene.createDefaultXRExperienceAsync({});
+      this.toggleXRMovementType();
+    } catch (xrError) {
+      console.log('xrerror', xrError);
+      this.xr = null;
+    }
 
     this.scene.onPointerObservable.add((pointerInfo) => {
       switch (pointerInfo.type) {
@@ -245,73 +252,74 @@ export class MoonBallApp {
       }
     });
 
-    this.xr.input.onControllerAddedObservable.add((controller) => {
-      controller.onMotionControllerInitObservable.add((motionController) => {
-        motionController.onModelLoadedObservable.add(mc => {
-          this.XRControllerAdded(controller, motionController.handedness);
-        })
+    if (this.xr) {
+      this.xr.input.onControllerAddedObservable.add((controller) => {
+        controller.onMotionControllerInitObservable.add((motionController) => {
+          motionController.onModelLoadedObservable.add(mc => {
+            this.XRControllerAdded(controller, motionController.handedness);
+          })
 
-        let yComponent = motionController.getComponent('y-button');
-        if (yComponent)
-          yComponent.onButtonStateChangedObservable.add(btn => {
-            if (btn.pressed) {
-              this.yButtonPress();
-            }
-          });
-        let xComponent = motionController.getComponent('x-button');
-        if (xComponent)
-          xComponent.onButtonStateChangedObservable.add(btn => {
-            if (btn.pressed) {
-              this.xButtonPress();
-            }
-          });
-        let aComponent = motionController.getComponent('a-button');
-        if (aComponent)
-          aComponent.onButtonStateChangedObservable.add(btn => {
-            if (btn.pressed) {
-              this.aButtonPress();
-            }
-          });
-        let bComponent = motionController.getComponent('b-button');
-        if (bComponent)
-          bComponent.onButtonStateChangedObservable.add(btn => {
-            if (btn.pressed) {
-              this.bButtonPress();
-            }
-          });
+          let yComponent = motionController.getComponent('y-button');
+          if (yComponent)
+            yComponent.onButtonStateChangedObservable.add(btn => {
+              if (btn.pressed) {
+                this.yButtonPress();
+              }
+            });
+          let xComponent = motionController.getComponent('x-button');
+          if (xComponent)
+            xComponent.onButtonStateChangedObservable.add(btn => {
+              if (btn.pressed) {
+                this.xButtonPress();
+              }
+            });
+          let aComponent = motionController.getComponent('a-button');
+          if (aComponent)
+            aComponent.onButtonStateChangedObservable.add(btn => {
+              if (btn.pressed) {
+                this.aButtonPress();
+              }
+            });
+          let bComponent = motionController.getComponent('b-button');
+          if (bComponent)
+            bComponent.onButtonStateChangedObservable.add(btn => {
+              if (btn.pressed) {
+                this.bButtonPress();
+              }
+            });
+        });
       });
-    });
 
-    this.xr.baseExperience.onInitialXRPoseSetObservable.add(() => {
-      // append the initial position of the camera to the parent node
-      //childForCamera.position.addInPlace(xr.baseExperience.camera.position);
-      this.xr.baseExperience.sessionManager.onXRFrameObservable.add(() => {
+      this.xr.baseExperience.onInitialXRPoseSetObservable.add(() => {
+        // append the initial position of the camera to the parent node
+        //childForCamera.position.addInPlace(xr.baseExperience.camera.position);
+        this.xr.baseExperience.sessionManager.onXRFrameObservable.add(() => {
 
-        if (this.activeFollowMeta && this.activeFollowMeta.basePivot) {
-          let position = new BABYLON.Vector3(0, 0, 0);
-          position.copyFrom(this.activeFollowMeta.basePivot.getAbsolutePosition());
-          position.y += 4;
+          if (this.activeFollowMeta && this.activeFollowMeta.basePivot) {
+            let position = new BABYLON.Vector3(0, 0, 0);
+            position.copyFrom(this.activeFollowMeta.basePivot.getAbsolutePosition());
+            position.y += 4;
 
-          let mX = position.x - this.scene.activeCamera.position.x;
-          let mZ = position.z - this.scene.activeCamera.position.z;
+            let mX = position.x - this.scene.activeCamera.position.x;
+            let mZ = position.z - this.scene.activeCamera.position.z;
 
-          let movementVector = new BABYLON.Vector3(mX, 0, mZ);
-          this.xr.baseExperience.camera.position.copyFrom(position);
+            let movementVector = new BABYLON.Vector3(mX, 0, mZ);
+            this.xr.baseExperience.camera.position.copyFrom(position);
+          }
+        })
+      });
+
+      this.xr.baseExperience.onStateChangedObservable.add((state) => {
+        switch (state) {
+          case BABYLON.WebXRState.IN_XR:
+            this.enterXR();
+            break;
+          case BABYLON.WebXRState.NOT_IN_XR:
+            this.enterNotInXR();
+            break;
         }
-      })
-    });
-
-    this.xr.baseExperience.onStateChangedObservable.add((state) => {
-      switch (state) {
-        case BABYLON.WebXRState.IN_XR:
-          this.enterXR();
-          break;
-        case BABYLON.WebXRState.NOT_IN_XR:
-          this.enterNotInXR();
-          break;
-      }
-    });
-
+      });
+    }
     return scene;
   }
   pointerDown(eventInfo) {
@@ -331,6 +339,9 @@ export class MoonBallApp {
   }
 
   toggleXRMovementType() {
+    if (!this.xr)
+      return;
+
     if (!this.currentXRFeature) {
       this.xr.baseExperience.featuresManager.disableFeature(BABYLON.WebXRFeatureName.TELEPORTATION);
       this.xr.baseExperience.featuresManager.enableFeature(BABYLON.WebXRFeatureName.MOVEMENT, "stable", {
@@ -516,9 +527,11 @@ export class MoonBallApp {
     this.shadowGenerator.addShadowCaster(weaponMesh)
 
     // audios
-    this.audios.get('shot').attachToMesh(weaponMesh)
-    this.audios.get('reload').attachToMesh(weaponMesh)
-    this.audios.get('empty').attachToMesh(weaponMesh)
+    if (this.xr) {      
+      this.audios.get('shot').attachToMesh(weaponMesh)
+      this.audios.get('reload').attachToMesh(weaponMesh)
+      this.audios.get('empty').attachToMesh(weaponMesh)
+    }
 
     // animations
     this.animations = this.assetManager.animations

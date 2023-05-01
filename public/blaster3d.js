@@ -308,7 +308,8 @@ export default class Blaster3D {
       if (audio.isPlaying === true) {
         audio.stop()
       }
-      audio.attachToMesh(weaponMesh)
+      if (this.app.xr)
+        audio.attachToMesh(weaponMesh)
       audio.play()
 
       // animation

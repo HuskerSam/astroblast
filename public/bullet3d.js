@@ -88,7 +88,8 @@ export default class Bullet3D {
     if (audio.isPlaying === true) {
       audio.stop()
     }
-    audio.attachToMesh(this.sceneBullet);
+    if (this.xr)
+      audio.attachToMesh(this.sceneBullet);
     audio.play()
 
     let scaling = asteroid.scaling.x;
