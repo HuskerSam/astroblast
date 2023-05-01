@@ -581,7 +581,7 @@ export class MoonBallApp {
 
     return closestObstacle === null ? null : closestObstacle
   }
-  checkParticleForCollision(particle) {
+  checkForBulletHit(particle) {
     this.activeBullets.forEach(bullet => {
       if (bullet.beenHit)
         return;

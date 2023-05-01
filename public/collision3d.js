@@ -55,6 +55,11 @@ export default class Collision3D {
         let vRandom = U3D.v(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
         let direction = vRandom.normalizeToNew();
         SPS.particles[p].velocity = U3D.v(this.particleSpeed * direction.x, this.particleSpeed * direction.y, this.particleSpeed * direction.z);
+
+        let rotX = (Math.random() - 0.5) / 20.0;
+        let rotY = (Math.random() - 0.5) / 20.0;
+        let rotZ = (Math.random() - 0.5) / 20.0;
+        SPS.particles[p].rotationVelocity = U3D.v(rotX, rotY, rotZ);
       }
     };
 
@@ -123,6 +128,14 @@ export default class Collision3D {
             q.position.x -= vdotn * nx * t;
             q.position.y -= vdotn * ny * t;
             q.position.z -= vdotn * nz * t;
+
+            particle.rotationVelocity.x *= -1;
+            particle.rotationVelocity.y *= -1;
+            particle.rotationVelocity.z *= -1;
+
+            q.rotationVelocity.x *= -1;
+            q.rotationVelocity.y *= -1;
+            q.rotationVelocity.z *= -1;
           }
         }
       }
@@ -162,7 +175,11 @@ export default class Collision3D {
       particle.position.y += particle.velocity.y;
       particle.position.z += particle.velocity.z;
 
-      this.app.checkParticleForCollision(particle);
+      particle.rotation.x += particle.rotationVelocity.x;
+      particle.rotation.y += particle.rotationVelocity.y;
+      particle.rotation.z += particle.rotationVelocity.z;
+
+      this.app.checkForBulletHit(particle);
     }
 
     SPS.initParticles();
