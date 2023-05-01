@@ -204,9 +204,14 @@ export class MoonBallApp {
     });
     this.env = environment;
 
-    scene.createDefaultCamera(false, true, true);
-    this.camera = scene.activeCamera;
 
+    this.camera = new BABYLON.DeviceOrientationCamera("DeviceOrientationCamera", U3D.vector(this.cameraMetaX.position), this.scene);
+    this.camera.attachControl(this.canvas, true);
+/*
+        scene.createDefaultCamera(false, true, true);
+    this.camera = scene.activeCamera;
+*/
+    this.scene.activeCamera = this.camera;
     scene.activeCamera.position = U3D.vector(this.cameraMetaX.position);
     scene.activeCamera.setTarget(U3D.vector(this.cameraMetaX.target));
     scene.activeCamera.speed = 0.5;
@@ -527,7 +532,7 @@ export class MoonBallApp {
     this.shadowGenerator.addShadowCaster(weaponMesh)
 
     // audios
-    if (this.xr) {      
+    if (this.xr) {
       this.audios.get('shot').attachToMesh(weaponMesh)
       this.audios.get('reload').attachToMesh(weaponMesh)
       this.audios.get('empty').attachToMesh(weaponMesh)

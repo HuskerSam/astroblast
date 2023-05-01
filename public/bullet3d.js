@@ -61,7 +61,8 @@ export default class Bullet3D {
     this.beenHit = true;
     this.sceneBullet.material.wireframe = true;
 
-    let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.app.collisionHelper.particleRadius * 4);
+    let asteroid = this.app.collisionHelper.rawAsteroidMeshes[asteroidName];
+    asteroid.setEnabled(true);
 
     let push = this.ray.direction.normalizeToNew().multiplyByFloats(10, 10, 10);
 

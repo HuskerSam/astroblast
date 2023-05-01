@@ -22,6 +22,7 @@ export default class Collision3D {
     });
     let promises = [];
     this.asteroidNames = {};
+    this.rawAsteroidMeshes = {};
     let loadAsteroid = async (SPSystem, index) => {
       let asteroidNameIndex = this.app.asteroidHelper.randomArray[index];
       let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
@@ -34,7 +35,10 @@ export default class Collision3D {
 
       let shapeId = SPSystem.addShape(asteroid, 1);
       this.asteroidNames[shapeId] = asteroidName;
-      asteroid.dispose();
+      this.rawAsteroidMeshes[asteroidName] = asteroid.clone();
+      this.rawAsteroidMeshes[asteroidName].setEnabled(false);
+
+      asteroid.dispose(true, false);
     };
 
     for (let c = 0; c < this.asteroidCount; c++) {
