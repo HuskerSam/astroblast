@@ -187,7 +187,7 @@ export class MoonBallApp {
       let instrumentation = new BABYLON.SceneInstrumentation(this.scene);
       instrumentation.captureFrameTime = true;
       setInterval(() => {
-        let perfValue = instrumentation.frameTimeCounter.lastSecAverage.toFixed(2);
+        let perfValue = instrumentation.frameTimeCounter.lastSecAverage.toFixed(1);
         console.log(perfValue + "ms per frame");
       }, 300);
     }
