@@ -100,7 +100,7 @@ export default class Collision3D {
   _nextLocationDelta(particle) {
     return {
       position: particle.velocity,
-      rotation: particle.rotation
+      rotation: particle.rotationVelocity
     }
   }
   detectBoundaryCollision(particle) {
