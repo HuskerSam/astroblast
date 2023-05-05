@@ -39,14 +39,11 @@ export class MoonBallApp {
     this.obstacles = new Array()
     this.bulletHoles = new Array();
 
+    this.roundType = "1";
+
+    this.asteroidCount = 50;
+
     //  this.assetManager = new AssetManager()
-
-
-    this.ui = {
-      intro: document.getElementById('intro'),
-      crosshairs: document.getElementById('crosshairs'),
-      loadingScreen: document.getElementById('loading-screen'),
-    }
 
     this.load();
   }
@@ -66,15 +63,27 @@ export class MoonBallApp {
     document.querySelector('.hide_loadingscreen').addEventListener('click', e => {
       BABYLON.Engine.audioEngine.unlock();
       document.querySelector('.loading_screen').style.display = 'none';
+      this.initRound();
     });
+
+    document.querySelectorAll('input[name="roundtype"]').forEach(ctl => ctl.addEventListener('input', e => {
+      this.initRound();
+    }));
+  }
+  async initRound() {
+    this.roundType = document.querySelector('input[name="roundtype"]:checked').value;
+    if (!this.collisionHelper)
+      this.collisionHelper = new Collision3D(this, this.asteroidCount);
+
+    await this.collisionHelper.init();
   }
   async initGraphics() {
     if (this.engine)
       return;
 
     this.cameraMetaX = {
-      position: U3D.v(5, 3, 0),
-      target: U3D.v(0, 2, 0)
+      position: U3D.v(0, 0, 0),
+      target: U3D.v(2, 0, 2)
     };
 
     this.canvas = document.querySelector("canvas");
@@ -158,12 +167,11 @@ export class MoonBallApp {
     this.gui3DManager = new BABYLON.GUI.GUI3DManager(this.scene);
 
     this.scene.collisionsEnabled = false;
-    let count = 50;
-    this.asteroidHelper = new Asteroid3D(this);
 
-    await this.asteroidHelper.init(count);
-    this.collisionHelper = new Collision3D(this, count);
-    await this.collisionHelper.init();
+    this.asteroidHelper = new Asteroid3D(this);
+    await this.asteroidHelper.init(this.asteroidCount);
+
+    this.initRound();
 
     if (this.xr) {
       this.xr.baseExperience.camera.onBeforeCameraTeleport.add(() => {

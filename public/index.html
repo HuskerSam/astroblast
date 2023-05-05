@@ -53,17 +53,20 @@
       min-height: 10%;
     }
 
-    .sound_banner {
-      font-size: 30px;
-      padding: 20px;
+    .options_panel {
       position: absolute;
       left: 5%;
       width: 90%;
       text-align: center;
-      color: red;
       top: 5%;
       min-width: 10%;
       min-height: 10%;
+      line-height: 2em;
+      background: rgba(127, 127, 127, 0.5);
+    }
+
+    .options_panel label {
+      padding: 5px;
     }
   </style>
 </head>
@@ -71,7 +74,12 @@
 <body>
   <div class="loading_screen">
     <button class="hide_loadingscreen">Loading...</button>
-    <h3 class="sound_banner">No sound in Safari<br>please use Chrome</h3>
+    <div class="options_panel">
+      No sound in Safari<br>please use Chrome<br><br>
+      <label><input type="radio" name="roundtype" value="1" class="round1" checked> Round 1</label><br>
+      <label><input type="radio" name="roundtype" value="2" class="round2"> Round 2</label><br>
+      <label><input type="radio" name="roundtype" value="3" class="round3"> Round 3</label><br>
+    </div>
   </div>
   <canvas touch-action="none"></canvas>
 </body>

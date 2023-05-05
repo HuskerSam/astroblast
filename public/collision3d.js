@@ -12,74 +12,52 @@ export default class Collision3D {
     this.sphereRadius = this.app.environmentRadius;
     this.innerSize = this.sphereRadius - 2 * this.particleRadius;
   }
+  async loadAsteroid(index) {
+    let asteroidNameIndex = this.app.asteroidHelper.randomArray[index];
+    let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
+    let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
+    //console.log(asteroid);
+    if (index % 15 === 0)
+      asteroid.material = this.app.asteroidHelper.asteroidMaterialRed;
+    if (index % 15 === 1)
+      asteroid.material = this.app.asteroidHelper.asteroidMaterialBlue;
+
+    let shapeId = this.SPS.addShape(asteroid, 1);
+    this.asteroidNames[shapeId] = asteroidName;
+    this.rawAsteroidMeshes[asteroidName] = asteroid.clone();
+    this.rawAsteroidMeshes[asteroidName].setEnabled(false);
+
+    asteroid.dispose(true, false);
+  }
   async init() {
     let scene = this.app.scene;
+
+    if (this.SPS) {
+      this.SPS.dispose();
+      this.SPS = null;
+    }
 
     let SPS = new BABYLON.SolidParticleSystem('SPS', scene, {
       particleIntersection: true,
       useModelMaterial: true
     });
-    let promises = [];
+    this.SPS = SPS;
+    if (!this.SPSRenderRegistered) {
+      this.SPSRenderRegistered = true;
+      scene.registerAfterRender(() => {
+        if (this.SPS)
+        this.SPS.setParticles();
+      });
+    }
+
     this.asteroidNames = {};
     this.rawAsteroidMeshes = {};
-    let loadAsteroid = async (SPSystem, index) => {
-      let asteroidNameIndex = this.app.asteroidHelper.randomArray[index];
-      let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
-      let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
-      //console.log(asteroid);
-      if (index % 15 === 0)
-        asteroid.material = this.app.asteroidHelper.asteroidMaterialRed;
-      if (index % 15 === 1)
-        asteroid.material = this.app.asteroidHelper.asteroidMaterialBlue;
 
-      let shapeId = SPSystem.addShape(asteroid, 1);
-      this.asteroidNames[shapeId] = asteroidName;
-      this.rawAsteroidMeshes[asteroidName] = asteroid.clone();
-      this.rawAsteroidMeshes[asteroidName].setEnabled(false);
-
-      asteroid.dispose(true, false);
-    };
-
-    for (let c = 0; c < this.asteroidCount; c++) {
-      promises.push(loadAsteroid(SPS, c));
-    }
-    await Promise.all(promises);
-
-    let mesh = SPS.buildMesh();
-    SPS.isAlwaysVisible = true;
-
-    let sq = 0; // quadratic b^2 - 4ac
-    let sqroot = 0; // root of b^2 - 4ac
-    let t = 0; //time to collision
-
-    // SPS initialization
-    SPS.initParticles = () => {
-      for (let p = 0; p < SPS.nbParticles; p++) {
-        let x = this.innerSize - 2 * this.innerSize * Math.random();
-        let y = this.innerSize - 2 * this.innerSize * Math.random();
-        let z = this.innerSize - 2 * this.innerSize * Math.random();
-
-        SPS.particles[p].position = new BABYLON.Vector3(x, y, z);
-        let vRandom = U3D.v(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
-        let direction = vRandom.normalizeToNew();
-        let particleSpeed = Math.min(this.particleMax, Math.max(this.particleMin, Math.random() * (this.particleMax + this.particleMin)));
-
-        SPS.particles[p].velocity = U3D.v(particleSpeed * direction.x, particleSpeed * direction.y, particleSpeed * direction.z);
-
-        let rotX = (Math.random() - 0.5) / 20.0;
-        let rotY = (Math.random() - 0.5) / 20.0;
-        let rotZ = (Math.random() - 0.5) / 20.0;
-        SPS.particles[p].rotationVelocity = U3D.v(rotX, rotY, rotZ);
-      }
-    };
-
-    SPS.updateParticle = (particle) => {
-      if (particle.beenHit)
+    this.SPS.updateParticle = (particle) => {
+      if (particle.beenHit || !this.SPS)
         return;
-      for (let p = particle.idx + 1; p < SPS.nbParticles; p++) {
-        let q = SPS.particles[p];
-        this.detectParticleCollision(particle, q);
-      }
+      for (let p = particle.idx + 1; p < this.SPS.nbParticles; p++)
+        this.detectParticleCollision(particle, this.SPS.particles[p]);
 
       this.detectBoundaryCollision(particle);
 
@@ -90,16 +68,23 @@ export default class Collision3D {
       this.app.checkForBulletHit(particle);
     }
 
-    SPS.initParticles();
-    scene.registerAfterRender(() => {
-      SPS.setParticles();
-    });
+    if (this.app.roundType === "2")
+      await this.initRoundType2Particles();
+    else
+      await this.initRoundType1Particles();
 
-    this.SPS = SPS;
+    let mesh = this.SPS.buildMesh();
+    this.SPS.isAlwaysVisible = true;
   }
   _nextLocationDelta(particle) {
+    if (particle.motionType === 'free')
+      return {
+        position: particle.velocity,
+        rotation: particle.rotationVelocity
+      }
+
     return {
-      position: particle.velocity,
+      position: U3D.v(0),
       rotation: particle.rotationVelocity
     }
   }
@@ -205,6 +190,61 @@ export default class Collision3D {
         q.rotationVelocity.y *= -1;
         q.rotationVelocity.z *= -1;
       }
+    }
+  }
+  async initRoundType1Particles() {
+    let promises = [];
+    for (let c = 0; c < this.asteroidCount; c++) {
+      promises.push(this.loadAsteroid(c));
+    }
+    await Promise.all(promises);
+
+    for (let p = 0; p < this.SPS.nbParticles; p++) {
+      let particle = this.SPS.particles[p];
+      particle.motionType = 'free';
+
+      let x = this.innerSize - (2 * this.innerSize * Math.random());
+      let y = this.innerSize - (2 * this.innerSize * Math.random());
+      let z = this.innerSize - (2 * this.innerSize * Math.random());
+
+      this.SPS.particles[p].position = new BABYLON.Vector3(x, y, z);
+      let vRandom = U3D.v(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+      let direction = vRandom.normalizeToNew();
+      let particleSpeed = this.particleMin + Math.random() * (this.particleMax - this.particleMin);
+
+      this.SPS.particles[p].velocity = U3D.v(particleSpeed * direction.x, particleSpeed * direction.y, particleSpeed * direction.z);
+
+      let rotX = (Math.random() - 0.5) / 20.0;
+      let rotY = (Math.random() - 0.5) / 20.0;
+      let rotZ = (Math.random() - 0.5) / 20.0;
+      this.SPS.particles[p].rotationVelocity = U3D.v(rotX, rotY, rotZ);
+    }
+
+  }
+  async initRoundType2Particles() {
+    let promises = [];
+    for (let c = 0; c < 10; c++) {
+      promises.push(this.loadAsteroid(c));
+    }
+    await Promise.all(promises);
+
+    let rowCount = 10;
+    let amplitude = 10;
+    for (let p = 0; p < rowCount; p++) {
+      let particle = this.SPS.particles[p];
+      let orbitRotation = (p / rowCount) * 2 * Math.PI;
+
+      particle.motionType = 'orbitable';
+      let x = amplitude * Math.cos(orbitRotation);
+      let y = 0;
+      let z = amplitude * Math.sin(orbitRotation);
+
+      particle.position = new BABYLON.Vector3(x, y, z);
+
+      let rotX = (Math.random() - 0.5) / 20.0;
+      let rotY = (Math.random() - 0.5) / 20.0;
+      let rotZ = (Math.random() - 0.5) / 20.0;
+      particle.rotationVelocity = U3D.v(rotX, rotY, rotZ);
     }
   }
 }
