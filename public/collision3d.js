@@ -46,7 +46,7 @@ export default class Collision3D {
       this.SPSRenderRegistered = true;
       scene.registerAfterRender(() => {
         if (this.SPS)
-        this.SPS.setParticles();
+          this.SPS.setParticles();
       });
     }
 
@@ -82,6 +82,18 @@ export default class Collision3D {
         position: particle.velocity,
         rotation: particle.rotationVelocity
       }
+
+    if (particle.motionType === 'orbitable') {
+      particle.orbitRotation += particle.orbitVelocity;
+      let x = particle.amplitude * Math.cos(particle.orbitRotation);
+      let z = particle.amplitude * Math.sin(particle.orbitRotation);
+      x -= particle.position.x;
+      z -= particle.position.z;
+      return {
+        position: U3D.v(x, 0, z),
+        rotation: particle.rotationVelocity
+      }
+    }
 
     return {
       position: U3D.v(0),
@@ -230,14 +242,19 @@ export default class Collision3D {
 
     let rowCount = 10;
     let amplitude = 10;
+    let orbitStart = Math.random() * Math.PI * 2;
+    let orbitVelocity = 0.01;
     for (let p = 0; p < rowCount; p++) {
       let particle = this.SPS.particles[p];
-      let orbitRotation = (p / rowCount) * 2 * Math.PI;
+      let orbitRotation = (p / rowCount) * 2 * Math.PI + orbitStart;
+      particle.orbitVelocity = orbitVelocity;
+      particle.orbitRotation = orbitRotation;
+      particle.amplitude = amplitude;
 
       particle.motionType = 'orbitable';
-      let x = amplitude * Math.cos(orbitRotation);
+      let x = amplitude * Math.cos(particle.orbitRotation);
       let y = 0;
-      let z = amplitude * Math.sin(orbitRotation);
+      let z = amplitude * Math.sin(particle.orbitRotation);
 
       particle.position = new BABYLON.Vector3(x, y, z);
 
