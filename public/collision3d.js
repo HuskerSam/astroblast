@@ -12,15 +12,17 @@ export default class Collision3D {
     this.sphereRadius = this.app.environmentRadius;
     this.innerSize = this.sphereRadius - 2 * this.particleRadius;
   }
-  async loadAsteroid(index) {
+  async loadAsteroid(index, modFactor = null) {
     let asteroidNameIndex = this.app.asteroidHelper.randomArray[index];
     let asteroidName = this.app.asteroidHelper.asteroidsNameList[asteroidNameIndex];
     let asteroid = await this.app.asteroidHelper.loadAsteroid(asteroidName, this.particleRadius * 4);
     //console.log(asteroid);
-    if (index % 15 === 0)
+    if (modFactor !== null) {
+      if (index % modFactor === 0)
       asteroid.material = this.app.asteroidHelper.asteroidMaterialRed;
-    if (index % 15 === 1)
+      if (index % modFactor === 1)
       asteroid.material = this.app.asteroidHelper.asteroidMaterialBlue;
+    }
 
     let shapeId = this.SPS.addShape(asteroid, 1);
     this.asteroidNames[shapeId] = asteroidName;
@@ -132,6 +134,22 @@ export default class Collision3D {
       particle.position.z += nudgeSize * vecIdeal.z;
     }
   }
+  _particleMotionRandom(particle) {
+    if (particle.motionType === 'free')
+      return;
+    if (particle.motionType === 'orbitable') {
+      let direction = this._nextLocationDelta(particle).position.normalizeToNew();
+      let yFactor = (Math.random() - 0.5) * 0.5;
+      direction.y = yFactor;
+      direction = direction.normalizeToNew();
+      particle.motionType = 'free';
+
+      let particleSpeed = this.particleMin + Math.random() * (this.particleMax - this.particleMin);
+      particle.velocity = U3D.v(particleSpeed * direction.x, particleSpeed * direction.y, particleSpeed * direction.z);
+
+      console.log('motion change collision', particle.velocity);
+    }
+  }
   detectParticleCollision(particle, q) {
     let dx = particle.position.x - q.position.x;
     let dy = particle.position.y - q.position.y;
@@ -154,6 +172,8 @@ export default class Collision3D {
     let sq = 4 * vdotd * vdotd - 4 * vl2 * (dl2 - 2 * this.particleRadius * this.particleRadius);
 
     if (vdotd < 0 && sq > 0) {
+      this._particleMotionRandom(particle);
+      this._particleMotionRandom(q);
       let sqroot = Math.sqrt(sq);
       let t = (-2 * vdotd - sqroot) / (2 * vl2);
       if (0 < t && t <= 1) {
@@ -204,64 +224,97 @@ export default class Collision3D {
       }
     }
   }
+  _initRandomParticle(particle) {
+    particle.motionType = 'free';
+
+    let x = this.innerSize - (2 * this.innerSize * Math.random());
+    let y = this.innerSize - (2 * this.innerSize * Math.random());
+    let z = this.innerSize - (2 * this.innerSize * Math.random());
+
+    particle.position = new BABYLON.Vector3(x, y, z);
+    let vRandom = U3D.v(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+
+    let direction = vRandom.normalizeToNew();
+    let particleSpeed = this.particleMin + Math.random() * (this.particleMax - this.particleMin);
+    particle.velocity = U3D.v(particleSpeed * direction.x, particleSpeed * direction.y, particleSpeed * direction.z);
+
+    let rotX = (Math.random() - 0.5) / 20.0;
+    let rotY = (Math.random() - 0.5) / 20.0;
+    let rotZ = (Math.random() - 0.5) / 20.0;
+    particle.rotationVelocity = U3D.v(rotX, rotY, rotZ);
+  }
+  _initOrbitableParticle(particle, amplitude, orbitStart, orbitVelocity, orbitIndex, orbitCount) {
+    let orbitRotation = (orbitIndex / orbitCount) * 2 * Math.PI + orbitStart;
+    particle.orbitVelocity = orbitVelocity;
+    particle.orbitRotation = orbitRotation;
+    particle.amplitude = amplitude;
+
+    particle.motionType = 'orbitable';
+    let x = amplitude * Math.cos(particle.orbitRotation);
+    let y = 0;
+    let z = amplitude * Math.sin(particle.orbitRotation);
+
+    particle.position = new BABYLON.Vector3(x, y, z);
+
+    let rotX = (Math.random() - 0.5) / 20.0;
+    let rotY = (Math.random() - 0.5) / 20.0;
+    let rotZ = (Math.random() - 0.5) / 20.0;
+    particle.rotationVelocity = U3D.v(rotX, rotY, rotZ);
+  }
   async initRoundType1Particles() {
     let promises = [];
     for (let c = 0; c < this.asteroidCount; c++) {
-      promises.push(this.loadAsteroid(c));
+      promises.push(this.loadAsteroid(c, 15));
     }
     await Promise.all(promises);
 
     for (let p = 0; p < this.SPS.nbParticles; p++) {
       let particle = this.SPS.particles[p];
-      particle.motionType = 'free';
-
-      let x = this.innerSize - (2 * this.innerSize * Math.random());
-      let y = this.innerSize - (2 * this.innerSize * Math.random());
-      let z = this.innerSize - (2 * this.innerSize * Math.random());
-
-      this.SPS.particles[p].position = new BABYLON.Vector3(x, y, z);
-      let vRandom = U3D.v(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
-      let direction = vRandom.normalizeToNew();
-      let particleSpeed = this.particleMin + Math.random() * (this.particleMax - this.particleMin);
-
-      this.SPS.particles[p].velocity = U3D.v(particleSpeed * direction.x, particleSpeed * direction.y, particleSpeed * direction.z);
-
-      let rotX = (Math.random() - 0.5) / 20.0;
-      let rotY = (Math.random() - 0.5) / 20.0;
-      let rotZ = (Math.random() - 0.5) / 20.0;
-      this.SPS.particles[p].rotationVelocity = U3D.v(rotX, rotY, rotZ);
+      this._initRandomParticle(particle);
     }
 
   }
   async initRoundType2Particles() {
     let promises = [];
-    for (let c = 0; c < 10; c++) {
+    for (let c = 0; c < 30; c++) {
       promises.push(this.loadAsteroid(c));
     }
     await Promise.all(promises);
 
-    let rowCount = 10;
+    promises = [];
+    for (let c = 0; c < 4; c++) {
+      promises.push(this.loadAsteroid(c, 2));
+    }
+    await Promise.all(promises);
+
+    let orbitCount = 10;
     let amplitude = 10;
     let orbitStart = Math.random() * Math.PI * 2;
     let orbitVelocity = 0.01;
-    for (let p = 0; p < rowCount; p++) {
+    for (let p = 0; p < orbitCount; p++) {
       let particle = this.SPS.particles[p];
-      let orbitRotation = (p / rowCount) * 2 * Math.PI + orbitStart;
-      particle.orbitVelocity = orbitVelocity;
-      particle.orbitRotation = orbitRotation;
-      particle.amplitude = amplitude;
+      this._initOrbitableParticle(particle, amplitude, orbitStart, orbitVelocity, p, orbitCount);
+    }
 
-      particle.motionType = 'orbitable';
-      let x = amplitude * Math.cos(particle.orbitRotation);
-      let y = 0;
-      let z = amplitude * Math.sin(particle.orbitRotation);
+    amplitude = 15;
+    orbitStart = Math.random() * Math.PI * 2;
+    orbitVelocity = -0.008;
+    for (let p = 10; p < 10 + orbitCount; p++) {
+      let particle = this.SPS.particles[p];
+      this._initOrbitableParticle(particle, amplitude, orbitStart, orbitVelocity, p, orbitCount);
+    }
 
-      particle.position = new BABYLON.Vector3(x, y, z);
+    amplitude = 20;
+    orbitStart = Math.random() * Math.PI * 2;
+    orbitVelocity = 0.006;
+    for (let p = 20; p < 20 + orbitCount; p++) {
+      let particle = this.SPS.particles[p];
+      this._initOrbitableParticle(particle, amplitude, orbitStart, orbitVelocity, p, orbitCount);
+    }
 
-      let rotX = (Math.random() - 0.5) / 20.0;
-      let rotY = (Math.random() - 0.5) / 20.0;
-      let rotZ = (Math.random() - 0.5) / 20.0;
-      particle.rotationVelocity = U3D.v(rotX, rotY, rotZ);
+    for (let p = 30; p < 34 ; p++) {
+      let particle = this.SPS.particles[p];
+      this._initRandomParticle(particle);
     }
   }
 }

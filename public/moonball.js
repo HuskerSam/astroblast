@@ -5,18 +5,6 @@ import Collision3D from '/collision3d.js';
 import Bullet3D from '/bullet3d.js';
 import Blaster3D from '/blaster3d.js';
 
-//import './babylon.js'
-//import './babylonjs.materials.min.js'
-/*
-import { AssetManager } from './fps/AssetManager.js'
-import { Bullet } from './fps/Bullet.js'
-import { Ground } from './fps/Ground.js'
-import { Player } from './fps/Player.js'
-import { Target } from './fps/Target.js'
-import { FirstPersonControls } from './fps/FirstPersonControls.js'
-*/
-
-
 export class MoonBallApp {
   constructor() {
     this.urlParams = new URLSearchParams(window.location.search);
@@ -472,103 +460,6 @@ export class MoonBallApp {
 
     return closestObstacle === null ? null : closestObstacle
   }
-
-  initScene() {
-    const canvas = document.getElementById('renderCanvas')
-    this.engine = new BABYLON.Engine(canvas, true, {}, true)
-
-    if (BABYLON.Engine.audioEngine) {
-      BABYLON.Engine.audioEngine.useCustomUnlockedButton = true
-    }
-
-    this.scene = new BABYLON.Scene(this.engine)
-    const scene = this.scene
-
-    scene.clearColor = new BABYLON.Color4(0.6, 0.6, 0.6, 1)
-    scene.useRightHandedSystem = true
-
-    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2
-    scene.fogColor = BABYLON.Color3.FromHexString('#a0a0a0')
-    scene.fogDensity = 0.005
-
-    const camera = new BABYLON.UniversalCamera('camera', new BABYLON.Vector3(0, 0, 0), scene, true)
-    camera.minZ = 0.01
-    camera.max = 1000
-    this.camera = camera
-
-    new BABYLON.HemisphericLight('light', new BABYLON.Vector3(-1, 1, 0))
-
-    this.dirLight = new BABYLON.DirectionalLight('dirLight', new BABYLON.Vector3(-1, -1, -1), scene)
-    this.dirLight.position = new BABYLON.Vector3(10, 9, 3)
-
-    this.audios = this.assetManager.audios
-
-    this.shadowGenerator = new BABYLON.ShadowGenerator(2048, this.dirLight)
-    this.shadowGenerator.useBlurExponentialShadowMap = true
-    this.shadowGenerator.useKernelBlur = true
-    this.shadowGenerator.blurKernel = 32
-
-    window.addEventListener('resize', this.onWindowResize, false)
-    this.ui.intro.addEventListener('click', this.onIntroClick, false)
-  }
-
-  initGround() {
-    const groundMesh = this.assetManager.models.get('ground')
-
-    const vertices = groundMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind)
-    const indices = groundMesh.getIndices()
-    const geometry = new YUKA.MeshGeometry(vertices, indices)
-
-    const ground = new Ground(geometry)
-    ground.setRenderComponent(groundMesh, sync)
-
-    this.add(ground)
-  }
-
-  initPlayer() {
-    const player = new Player(this.camera)
-    player.head.setRenderComponent(this.camera, syncCamera)
-
-    this.add(player)
-    this.player = player
-
-    // weapon
-    const weapon = player.weapon
-    const weaponMesh = this.assetManager.models.get('weapon')
-    weapon.setRenderComponent(weaponMesh, sync)
-
-    this.shadowGenerator.addShadowCaster(weaponMesh)
-
-    // audios
-    if (this.xr) {
-      this.audios.get('shot').attachToMesh(weaponMesh)
-      this.audios.get('reload').attachToMesh(weaponMesh)
-      this.audios.get('empty').attachToMesh(weaponMesh)
-    }
-
-    // animations
-    this.animations = this.assetManager.animations
-  }
-
-  initControls() {
-    const player = this.player
-
-    this.controls = new FirstPersonControls(player)
-
-    const intro = this.ui.intro
-    const crosshairs = this.ui.crosshairs
-
-    this.controls.addEventListener('lock', () => {
-      intro.classList.add('hidden')
-      crosshairs.classList.remove('hidden')
-    })
-
-    this.controls.addEventListener('unlock', () => {
-      intro.classList.remove('hidden')
-      crosshairs.classList.add('hidden')
-    })
-  }
-
   updateUI() {
 
   }

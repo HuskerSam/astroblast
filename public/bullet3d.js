@@ -84,7 +84,8 @@ export default class Bullet3D {
     this.sceneBullet.material.wireframe = true;
     this.sceneBullet.position.addInPlace(push);
 
-    const audio = this.app.audios.get('impact' + (Math.floor(Math.random() * 5) + 1).toString());
+    let impactName = (this.sceneBullet.isBlue) ? 'impact1' : 'impact2';
+    const audio = this.app.audios.get(impactName);
 
     if (audio.isPlaying === true) {
       audio.stop()
